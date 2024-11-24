@@ -1,14 +1,26 @@
 import { View, StyleSheet, Text } from "react-native";
-import { useNavigation } from '@react-navigation/native'
+import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { Button, Icon } from '@rneui/themed'
+import UseUserStorage from "../hooks/UseUserStorage";
+//components
 import Header from "../components/Header";
+import ProgressChart from "../components/ProgressChart";
+
 
 export default function Home() {
     const { navigate } = useNavigation()
+    const {totalUserLocal, handleGetUser} = UseUserStorage()
+    
+    const assignedRecords = 10
 
     const handleAddUser = () => {
         navigate('Nuevo Usuario')
     }
+
+    useFocusEffect(()=>{
+        handleGetUser().catch(null)
+    })
+   
     
     return (
         <View style={styles.container}>
@@ -27,6 +39,10 @@ export default function Home() {
                     />
                 </View>
             </View>
+            <View>
+                <ProgressChart assignedRecords={assignedRecords} totalUserLocal={totalUserLocal}/>
+            </View>
+            
         </View>
     )
 }

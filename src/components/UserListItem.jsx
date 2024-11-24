@@ -3,6 +3,9 @@ import { Button, Icon } from '@rneui/themed'
 export default function userListItems({user, index}) {
 
     const {name, lastName, phoneNumber, municipality} = user
+
+    
+
     return (
         <View style={styles.userListItems}>
             <View style={{ flex: 2, flexDirection: 'row', alignItems: "center", }}>

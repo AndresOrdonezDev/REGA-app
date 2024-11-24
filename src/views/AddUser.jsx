@@ -34,7 +34,6 @@ export default function AddUser() {
     }
 
     const handleSearch = (text) => {
-        
         if (text === '') {
           setFilteredUsers(usersLocal)
         } else {
@@ -82,7 +81,10 @@ export default function AddUser() {
 
                 {filteredUsers?.map((user, index) => (
                     <UserListItems index={index} user={user} key={index} />
+                    
                 ))}
+
+                {!filteredUsers.length && <Text style={styles.textNoResults}>No hay resultados de búsqueda</Text>}
             </ScrollView>
 
             <AddUserModal visible={showModal} onClose={handleModalClose} />
@@ -123,4 +125,11 @@ const styles = StyleSheet.create({
         fontSize: 15,
         color: '#777'
     },
+    textNoResults:{
+        textAlign:'center', 
+        fontWeight:'bold', 
+        marginVertical:50, 
+        color:'#888', 
+        fontSize:18
+    }
 })

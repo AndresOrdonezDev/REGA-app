@@ -1,11 +1,13 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useState } from "react";
 import { useToast } from "react-native-toast-notifications";
 const USER_LOCAL_KEY = '@My-users-local';
 
 export default function UseUserStorage() {
-
+    
     const toast = useToast();
-
+    
+    const [totalUserLocal, setTotalUserLocal] = useState(0)
     const handleSaveUser = async (data) => {
         
         try {
@@ -18,6 +20,7 @@ export default function UseUserStorage() {
             }
 
             updatedUsers.push(data);
+            
             await AsyncStorage.setItem(USER_LOCAL_KEY, JSON.stringify(updatedUsers));
             return  toast.show("Usuario Guardado exitosamente", { type: "success" });
         } catch (error) {
@@ -29,8 +32,10 @@ export default function UseUserStorage() {
     const handleGetUser = async () => {
         try {
             const usersLocal = await AsyncStorage.getItem(USER_LOCAL_KEY);
-            if (usersLocal) {               
-                return JSON.parse(usersLocal);
+            if (usersLocal) { 
+                const usersParsed = JSON.parse(usersLocal);
+                setTotalUserLocal(usersParsed.length)   
+                return usersParsed;
             }
             //validation to list user empty
             return [];
@@ -43,5 +48,6 @@ export default function UseUserStorage() {
     return {
         handleSaveUser,
         handleGetUser,
+        totalUserLocal
     };
 }
