@@ -1,19 +1,20 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Modal, StyleSheet, ScrollView } from "react-native";
+import { View, Text, Modal, StyleSheet, ScrollView, Alert } from "react-native";
 import { Button, Icon, Input, ListItem } from '@rneui/themed'
 import UseUserStorage from "../hooks/UseUserStorage";
 
-export default function AddUserModal({ onClose, visible }) {
-    const { handleSaveUser } = UseUserStorage()
+export default function AddUserModal({ onClose, visible, userEditing }) {
+
+    const { handleSaveUser, handleUpdateUser, handleDeleteUser } = UseUserStorage()
     const [expanded, setExpanded] = useState(false)
     const [selectedMunicipality, setSelectedMunicipality] = useState('')
     const [userData, setUserData] = useState({
-        name:'',
-        lastName:'',
-        idNumber:'',
-        phoneNumber:'',
+        name: '',
+        lastName: '',
+        idNumber: '',
+        phoneNumber: '',
         municipality: '',
-        direction:'',
+        direction: '',
     })
     const [isFormEmpty, setIsFormEmpty] = useState('')
     const municipalities = [
@@ -32,54 +33,81 @@ export default function AddUserModal({ onClose, visible }) {
         "VILLAGARZON"
     ];
 
-    const handleChange = (name, text)=>{
+    const handleChange = (name, text) => {
         setUserData({
             ...userData,
-            [name]:text
-        })        
+            [name]: text
+        })
     }
 
-    useEffect(()=>{
+    useEffect(() => {
         handleChange('municipality', selectedMunicipality)
-    },[selectedMunicipality])
+    }, [selectedMunicipality])
 
-    useEffect(()=>{
+    useEffect(() => {
         setUserData({
-            name:'',
-            lastName:'',
-            idNumber:'',
-            phoneNumber:'',
-            municipality: '',
-            direction:'',
+            name: userEditing?.name || '',
+            lastName: userEditing?.lastName || '',
+            idNumber: userEditing?.idNumber || '',
+            phoneNumber: userEditing?.phoneNumber || '',
+            municipality: userEditing?.municipality || '',
+            direction: userEditing?.direction || '',
         })
-        setSelectedMunicipality('')
+        setSelectedMunicipality(userEditing?.municipality || '',)
     }, [visible])
 
-    const handleSubmitUser = async ()=>{
-        if (Object.values(userData).includes('')){
+
+    const handleSubmitUser = async (isEdit) => {
+        if (Object.values(userData).includes('')) {
             setIsFormEmpty('Todos los campos son obligatorios')
-            setTimeout(()=>{
+            setTimeout(() => {
                 setIsFormEmpty('')
-            },3000)
+            }, 3000)
+            return
+        } 
+            
+        if(isEdit){
+            await handleUpdateUser({...userData})
+            onClose()
         }else{
-            await handleSaveUser({...userData})
+            await handleSaveUser({ ...userData })
             onClose()
         }
+        
+    }
+
+    const getUserToDelete = async(id)=>{
+        Alert.alert(
+            "Confirmar eliminación",
+            "¿Deseas eliminar este usuario?",
+            [
+                {
+                    text: "Cancelar",
+                    style: "cancel",   
+                },
+                {
+                    text: "Eliminar",
+                    style: "destructive",
+                    onPress: async () => [await handleDeleteUser(id), onClose()]
+                }
+            ]
+        );
+        
     }
     return (
         <Modal visible={visible} onRequestClose={onClose} transparent animationType="fade" >
             <View style={styles.container} >
                 <View style={styles.content}>
                     <View style={styles.closeContainer}>
-                        <Text style={{ flex: 1, fontSize: 15 }}>Crear Nuevo Usuario</Text>
+                        <Text style={{ flex: 1, fontSize: 15 }}>{userEditing ? 'Editar usuario' : 'Crear Nuevo Usuario'} </Text>
                         <Button onPress={() => onClose()} icon={<Icon name="close" />} color='transparent' />
                     </View>
                     <ScrollView>
                         <View>
-                            <Input value={userData.name} onChangeText={(text)=> handleChange('name',text)} placeholder="Nombres" />
-                            <Input value={userData.lastName} onChangeText={(text)=> handleChange('lastName',text)} placeholder="Apellidos" />
-                            <Input value={userData.idNumber} onChangeText={(text)=> handleChange('idNumber',text)} placeholder="No. Cédula" />
-                            <Input value={userData.phoneNumber} onChangeText={(text)=> handleChange('phoneNumber',text)} placeholder="Celular" />
+                            <Input value={userData.name} onChangeText={(text) => handleChange('name', text)} placeholder="Nombres" />
+                            <Input value={userData.lastName} onChangeText={(text) => handleChange('lastName', text)} placeholder="Apellidos" />
+                            <Input value={userData.idNumber} onChangeText={(text) => handleChange('idNumber', text)} placeholder="No. Cédula" />
+                            <Input value={userData.phoneNumber} onChangeText={(text) => handleChange('phoneNumber', text)} placeholder="Celular" />
 
                             <ListItem.Accordion
                                 content={
@@ -95,25 +123,38 @@ export default function AddUserModal({ onClose, visible }) {
                                 <ListItem>
                                     <ListItem.Content>
                                         {municipalities.map(name => (
-                                            <ListItem.Title onPress={()=> [setSelectedMunicipality(name),setExpanded(false)]} style={styles.nameMunicipality} key={name}>{name}</ListItem.Title>
+                                            <ListItem.Title onPress={() => [setSelectedMunicipality(name), setExpanded(false)]} style={styles.nameMunicipality} key={name}>{name}</ListItem.Title>
                                         ))}
 
                                     </ListItem.Content>
                                 </ListItem>
                             </ListItem.Accordion>
 
-                            <Input value={userData.direction} onChangeText={(text)=> handleChange('direction',text)} placeholder="Dirección" />
+                            <Input value={userData.direction} onChangeText={(text) => handleChange('direction', text)} placeholder="Dirección" />
                         </View>
 
                     </ScrollView>
 
-                    <View style={{ alignItems: 'flex-end', justifyContent: 'center', paddingVertical: 10 }}>
-                        <Button 
-                            title='Guardar' 
-                            color='#00bfa5' 
+                    <View style={{ alignItems: 'flex-end', justifyContent: 'flex-end', paddingVertical: 10, flexDirection: 'row', gap: 10 }}>
+                        {!userEditing && <Button
+                            title='Guardar'
+                            color='#00bfa5'
                             radius='lg'
-                            onPress={()=> handleSubmitUser()}
-                        />
+                            onPress={() => handleSubmitUser(false)}
+                        />}
+                        {userEditing && <Button
+                            title='Editar'
+                            color='#fe5f2f'
+                            radius='lg'
+                            onPress={() => handleSubmitUser(true)}
+                        />}
+                        {userEditing && <Button
+                            title='Eliminar'
+                            color='#f84455'
+                            radius='lg'
+                            onPress={()=>getUserToDelete(userEditing?.idNumber)}
+                        />}
+                        
                     </View>
                     {isFormEmpty && <Text style={styles.alertText}>{isFormEmpty}</Text>}
 
@@ -154,15 +195,15 @@ const styles = StyleSheet.create({
     },
     nameMunicipality: {
 
-        color: 'green',
+        color: '#00bfa5',
         marginVertical: 3,
     },
-    alertText:{
-        color:'red',
-        textAlign:'center',
-        borderStartWidth:2,
-        borderRightColor:'red',
-        fontSize:15 
+    alertText: {
+        color: 'red',
+        textAlign: 'center',
+        borderStartWidth: 2,
+        borderRightColor: 'red',
+        fontSize: 15
     }
 
 })

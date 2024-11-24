@@ -1,8 +1,8 @@
 import { View, Text, StyleSheet } from "react-native";
 import { Button, Icon } from '@rneui/themed'
-export default function userListItems({user, index}) {
+export default function userListItems({user, index, getIdUser}) {
 
-    const {name, lastName, phoneNumber, municipality} = user
+    const {name, lastName, phoneNumber, municipality,idNumber} = user
 
     
 
@@ -18,7 +18,7 @@ export default function userListItems({user, index}) {
                     <Text style={styles.userItemText}>{municipality}</Text>
                 </View>
             </View>
-            <Button icon={<Icon name="keyboard-arrow-right" />} radius='lg' color='#fff' />
+            <Button onPress={()=> getIdUser(idNumber)} icon={<Icon name="keyboard-arrow-right" />} radius='lg' color='#fff' />
         </View>
     )
 }

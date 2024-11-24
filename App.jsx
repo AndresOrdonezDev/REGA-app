@@ -5,7 +5,7 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <ToastProvider
-        placement='center'
+        placement='bottom'
       >
       <SafeAreaView style={{ flex: 1 }}>
         <Routes/>

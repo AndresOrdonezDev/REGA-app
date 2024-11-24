@@ -6,7 +6,7 @@ export default function ProgressChart({ assignedRecords, totalUserLocal }) {
     return (
         <View>
             <View style={styles.chartContainer}>
-
+                
                 <CircularProgress
                     value={(totalUserLocal / assignedRecords) * 100}
                     valueSuffix={'%'}
@@ -14,7 +14,7 @@ export default function ProgressChart({ assignedRecords, totalUserLocal }) {
                     duration={500}
                     activeStrokeColor={'#00bfa5'}
                     progressValueColor={'#00bfa5'}
-                    // title={`${totalUserLocal} / ${assignedRecords}`}
+                   
                     titleColor={'#00bfa5'}
                     titleStyle={{ fontWeight: 'bold' }}
                 />

@@ -12,6 +12,7 @@ export default function AddUser() {
     const [showModal, setShowModal] = useState(false)
     const [usersLocal, setUsersLocal] = useState([])
     const [filteredUsers, setFilteredUsers] = useState([]);
+    const [userEditing, setUserEditing] = useState(null)
 
     useEffect(() => {
         getAllUsers();
@@ -20,6 +21,7 @@ export default function AddUser() {
 
     const handleModalClose = async () => {
         getAllUsers()
+        setUserEditing(null)
         setShowModal(false)
     }
 
@@ -47,13 +49,19 @@ export default function AddUser() {
         }
       };
 
+    const handleGetIdUser = (id)=>{
+        const userEditSelected = usersLocal.filter(user => user.idNumber === id ? user : null)[0]
+        setUserEditing(userEditSelected)
+        setShowModal(true)
+    }
+
     return (
         <View style={styles.container} >
             <Header />
 
             <View style={styles.usersContainer}>
                 <View style={styles.leftContainer}>
-                    <Text style={styles.userLegend} >Listado de usuarios</Text>
+                    <Text style={styles.userLegend} >Listado de usuarios </Text>
                 </View>
                 <View style={styles.rightContainer}>
                     <Button
@@ -80,14 +88,14 @@ export default function AddUser() {
             <ScrollView style={{marginBottom:15}}>
 
                 {filteredUsers?.map((user, index) => (
-                    <UserListItems index={index} user={user} key={index} />
+                    <UserListItems index={index} user={user} key={index} getIdUser ={handleGetIdUser}/>
                     
                 ))}
 
-                {!filteredUsers.length && <Text style={styles.textNoResults}>No hay resultados de búsqueda</Text>}
+                {!filteredUsers.length && <Text style={styles.textNoResults}>{usersLocal.length ? 'No hay resultados de búsqueda': 'No hay usuarios registrados'}</Text>}
             </ScrollView>
 
-            <AddUserModal visible={showModal} onClose={handleModalClose} />
+            <AddUserModal visible={showModal} onClose={handleModalClose} userEditing={userEditing}/>
         </View>
     )
 }

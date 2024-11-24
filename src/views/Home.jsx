@@ -6,10 +6,9 @@ import UseUserStorage from "../hooks/UseUserStorage";
 import Header from "../components/Header";
 import ProgressChart from "../components/ProgressChart";
 
-
 export default function Home() {
     const { navigate } = useNavigation()
-    const {totalUserLocal, handleGetUser} = UseUserStorage()
+    const {totalUserLocal, handleGetUser, handleSync } = UseUserStorage()
     
     const assignedRecords = 10
 
@@ -19,9 +18,9 @@ export default function Home() {
 
     useFocusEffect(()=>{
         handleGetUser().catch(null)
+        handleSync().catch(null)
     })
-   
-    
+
     return (
         <View style={styles.container}>
             <Header />
@@ -41,8 +40,7 @@ export default function Home() {
             </View>
             <View>
                 <ProgressChart assignedRecords={assignedRecords} totalUserLocal={totalUserLocal}/>
-            </View>
-            
+            </View>  
         </View>
     )
 }
