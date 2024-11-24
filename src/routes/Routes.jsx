@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack'
 const Stack  = createNativeStackNavigator()
 import Home from "../views/Home";
 import AddUser from "../views/AddUser";
+
 export default function Routes(){
 
     return(

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, Modal, StyleSheet, ScrollView, Alert } from "react-native";
 import { Button, Icon, Input, ListItem } from '@rneui/themed'
-import UseUserStorage from "../hooks/UseUserStorage";
+import UsePersonsStorage from "../hooks/UsePersonsStorage";
 
 export default function AddUserModal({ onClose, visible, userEditing }) {
 
-    const { handleSaveUser, handleUpdateUser, handleDeleteUser } = UseUserStorage()
+    const { handleSaveUser, handleUpdateUser, handleDeleteUser } = UsePersonsStorage()
     const [expanded, setExpanded] = useState(false)
     const [selectedMunicipality, setSelectedMunicipality] = useState('')
     const [userData, setUserData] = useState({

@@ -1,10 +1,10 @@
 import { View, Text, StyleSheet } from "react-native";
 import { Button, Icon } from '@rneui/themed'
+
+
 export default function userListItems({user, index, getIdUser}) {
 
     const {name, lastName, phoneNumber, municipality,idNumber} = user
-
-    
 
     return (
         <View style={styles.userListItems}>

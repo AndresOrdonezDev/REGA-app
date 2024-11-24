@@ -5,18 +5,18 @@ import NetInfo from "@react-native-community/netinfo";
 
 const USER_LOCAL_KEY = '@My-users-local';
 
-export default function UseUserStorage() {
+export default function UsePersonsStorage() {
 
     const handleSync = async () => {
-        const netInfo = await NetInfo.fetch();
-        if (netInfo.isConnected) {
-          console.log("Conexión a internet detectada. Sincronizando...");
-          //await handleSyncServerToLocal(); // Primero descargar datos del servidor
-          //await handleSyncLocalToServer(); // Luego sincronizar datos locales al servidor
+        const {isConnected} = await NetInfo.fetch();
+        if (isConnected) {
+            //await handleSyncServerToLocal(); // Primero descargar datos del servidor
+            //await handleSyncLocalToServer(); // Luego sincronizar datos locales al servidor
+            toast.show("conexión a internet", { type: "success" });
         } else {
-          toast.show("Sin conexión a internet. Sincronización no disponible.", { type: "warning" });
+            toast.show("Sin conexión a internet. Sincronización no disponible.", { type: "warning" });
         }
-      };
+    };
 
     const toast = useToast();
 
@@ -36,10 +36,10 @@ export default function UseUserStorage() {
             updatedUsers.push(data);
 
             await AsyncStorage.setItem(USER_LOCAL_KEY, JSON.stringify(updatedUsers));
-            return toast.show("Usuario Guardado exitosamente", { type: "success" });
+            return toast.show("Registro Guardado exitosamente", { type: "success", style: { backgroundColor: "#00bfa5" }  });
         } catch (error) {
-            console.error('Error al guardar el usuario:', error);
-            return toast.show("Error al guardar el usuario", { type: "error" });
+            console.error('Error al guardar el Registro:', error);
+            return toast.show("Error al guardar el Registro", { type: "error" });
         }
     };
 
@@ -54,7 +54,7 @@ export default function UseUserStorage() {
             //validation to list user empty
             return [];
         } catch (error) {
-            console.error('Error al obtener los usuarios:', error);
+            console.error('Error al obtener los registros:', error);
             return [];
         }
     };
@@ -63,24 +63,24 @@ export default function UseUserStorage() {
         try {
             const currentSavedUsers = await AsyncStorage.getItem(USER_LOCAL_KEY)
             const parsedUsers = JSON.parse(currentSavedUsers)
-            
+
             const userIndex = parsedUsers.findIndex(user => user.idNumber === data.idNumber)
-            
-            if(userIndex === -1 ){
-                return toast.show('Usuario no encontrado', {type:'error'})
+
+            if (userIndex === -1) {
+                return toast.show('Persona no encontrada', { type: 'error' })
             }
-           
+
             parsedUsers[userIndex] = {
                 ...parsedUsers[userIndex],
                 ...data
             }
 
             await AsyncStorage.setItem(USER_LOCAL_KEY, JSON.stringify(parsedUsers))
-            return toast.show('Usuario actualizado correctamente',{type:'success', style: { backgroundColor: "#00bfa5" }})
+            return toast.show('Registro actualizado correctamente', { type: 'success', style: { backgroundColor: "#00bfa5" } })
 
         } catch (error) {
             console.error(error)
-            return toast.show("Error al actualizar el usuario", { type: "error" });
+            return toast.show("Error al actualizar", { type: "error" });
         }
     }
 
@@ -89,19 +89,19 @@ export default function UseUserStorage() {
             const currentSavedUsers = await AsyncStorage.getItem(USER_LOCAL_KEY)
             const parsedUsers = JSON.parse(currentSavedUsers)
             const userIndex = parsedUsers.findIndex(user => user.idNumber === idNumber)
-            
-            if(userIndex === -1){
-                return toast.show('Usuario no encontrado', {type: 'error'})
+
+            if (userIndex === -1) {
+                return toast.show('Persona no encontrada', { type: 'error' })
             }
-            
+
             // Filter user to delete
             const updatedUsers = parsedUsers.filter(user => user.idNumber !== idNumber)
-            
+
             await AsyncStorage.setItem(USER_LOCAL_KEY, JSON.stringify(updatedUsers))
-            return toast.show('Usuario eliminado correctamente', {type: 'success'})
+            return toast.show('Registro eliminado correctamente', { type: 'success', style: { backgroundColor: "#00bfa5" }  })
         } catch (error) {
             console.error(error)
-            return toast.show("Error al eliminar el usuario", { type: "error" });
+            return toast.show("Error al eliminar", { type: "error" });
         }
     }
 

@@ -5,10 +5,10 @@ import { Button, Icon, Input } from '@rneui/themed'
 
 import AddUserModal from "../components/AddUserModal";
 import UserListItems from "../components/UserListItem";
-import UseUserStorage from "../hooks/UseUserStorage";
+import UsePersonsStorage from "../hooks/UsePersonsStorage";
 
 export default function AddUser() {
-    const { handleGetUser } = UseUserStorage()
+    const { handleGetUser } = UsePersonsStorage()
     const [showModal, setShowModal] = useState(false)
     const [usersLocal, setUsersLocal] = useState([])
     const [filteredUsers, setFilteredUsers] = useState([]);
