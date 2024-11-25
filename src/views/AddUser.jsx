@@ -40,17 +40,18 @@ export default function AddUser() {
           setFilteredUsers(usersLocal)
         } else {
           const filtered = usersLocal.filter((user) =>
-            `${user.name} ${user.lastName}`.toLowerCase().includes(text.toLowerCase()) ||
-            user.idNumber.toLowerCase().includes(text.toLowerCase()) ||
-            user.phoneNumber.toLowerCase().includes(text.toLowerCase()) ||
-            user.municipality.toLowerCase().includes(text.toLowerCase())
+            `${user.name} ${user.last_name}`.toLowerCase().includes(text.toLowerCase()) ||
+            user.document_number.toLowerCase().includes(text.toLowerCase()) ||
+            user.cellphone.toLowerCase().includes(text.toLowerCase()) ||
+            user.city.toLowerCase().includes(text.toLowerCase()) ||
+            user.locality.toLowerCase().includes(text.toLowerCase()) 
           );
           setFilteredUsers(filtered);
         }
       };
 
     const handleGetIdUser = (id)=>{
-        const userEditSelected = usersLocal.filter(user => user.idNumber === id ? user : null)[0]
+        const userEditSelected = usersLocal.filter(user => user.document_number === id ? user : null)[0]
         setUserEditing(userEditSelected)
         setShowModal(true)
     }

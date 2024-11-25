@@ -2,31 +2,42 @@ import { View, StyleSheet, Text } from "react-native";
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import { Button, Icon } from '@rneui/themed'
 import UsePersonsStorage from "../hooks/UsePersonsStorage";
+import { useCallback, useEffect, useState } from "react";
+
 //components
 import Header from "../components/Header";
 import ProgressChart from "../components/ProgressChart";
 
 export default function Home() {
+
     const { navigate } = useNavigation()
-    const {totalUserLocal, handleGetUser, handleSync } = UsePersonsStorage()
-    
-    const assignedRecords = 10
+    const {totalUserLocal, handleGetUser, handleSync} = UsePersonsStorage()
+   
+
+    const assignedRecords = 100
 
     const handleAddUser = () => {
-        navigate('Nuevo Usuario')
+        navigate('usersList')
     }
 
-    useFocusEffect(()=>{
-        handleGetUser().catch(null)
-        handleSync().catch(null)
-    })
+    
+
+    useFocusEffect(
+        useCallback(() => {
+            const fetchData = async () => {
+                await handleGetUser();
+                await handleSync();
+            };
+            fetchData().catch(null);
+        }, [handleGetUser, handleSync])
+    );
 
     return (
         <View style={styles.container}>
             <Header />
             <View style={styles.usersContainer}>
                 <View style={styles.leftContainer}>
-                    <Text style={styles.userLegend} >Usuarios</Text>
+                    <Text style={styles.userLegend} >Usuarios </Text>
                 </View>
                 <View style={styles.rightContainer}>
                     <Button

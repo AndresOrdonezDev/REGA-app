@@ -4,7 +4,7 @@ import { Button, Icon } from '@rneui/themed'
 
 export default function userListItems({user, index, getIdUser}) {
 
-    const {name, lastName, phoneNumber, municipality,idNumber} = user
+    const {name, last_name, cellphone, locality,document_number, city  } = user
 
     return (
         <View style={styles.userListItems}>
@@ -13,12 +13,12 @@ export default function userListItems({user, index, getIdUser}) {
                     <Text style={{ textAlign: 'center' }}>{index + 1}</Text>
                 </View>
                 <View>
-                    <Text style={styles.userItemText}>{name} {lastName}</Text>
-                    <Text style={styles.userItemText}>{phoneNumber}</Text>
-                    <Text style={styles.userItemText}>{municipality}</Text>
+                    <Text style={styles.userItemText}>{name} {last_name}</Text>
+                    <Text style={styles.userItemText}>{cellphone}</Text>
+                    <Text style={styles.userItemText}>{locality} - {city} </Text>
                 </View>
             </View>
-            <Button onPress={()=> getIdUser(idNumber)} icon={<Icon name="keyboard-arrow-right" />} radius='lg' color='#fff' />
+            <Button onPress={()=> getIdUser(document_number)} icon={<Icon name="keyboard-arrow-right" />} radius='lg' color='#fff' />
         </View>
     )
 }

@@ -5,16 +5,22 @@ import UsePersonsStorage from "../hooks/UsePersonsStorage";
 
 export default function AddUserModal({ onClose, visible, userEditing }) {
 
-    const { handleSaveUser, handleUpdateUser, handleDeleteUser } = UsePersonsStorage()
+    const { handleSaveUser, handleUpdateUser, handleDeleteUser, handleSync } = UsePersonsStorage()
     const [expanded, setExpanded] = useState(false)
-    const [selectedMunicipality, setSelectedMunicipality] = useState('')
+    const [selectedCity, setselectedCity] = useState('')
+
     const [userData, setUserData] = useState({
-        name: '',
-        lastName: '',
-        idNumber: '',
-        phoneNumber: '',
-        municipality: '',
-        direction: '',
+
+        document_number: '',
+        name: "",
+        last_name: "",
+        cellphone: "",
+        locality: "",
+        ubication: "1.256359, -74.523696",
+        department: "PUTUMAYO",
+        city: "",
+        number_assigned: "25",
+        user_register_id: "1",//convertir dato a entero en backend
     })
     const [isFormEmpty, setIsFormEmpty] = useState('')
     const municipalities = [
@@ -41,49 +47,57 @@ export default function AddUserModal({ onClose, visible, userEditing }) {
     }
 
     useEffect(() => {
-        handleChange('municipality', selectedMunicipality)
-    }, [selectedMunicipality])
+        handleChange('city', selectedCity)
+    }, [selectedCity])
 
     useEffect(() => {
         setUserData({
+            document_number: userEditing?.document_number || '',
             name: userEditing?.name || '',
-            lastName: userEditing?.lastName || '',
-            idNumber: userEditing?.idNumber || '',
-            phoneNumber: userEditing?.phoneNumber || '',
-            municipality: userEditing?.municipality || '',
-            direction: userEditing?.direction || '',
+            last_name: userEditing?.last_name || '',
+            cellphone: userEditing?.cellphone || '',
+            locality: userEditing?.locality || '',
+            ubication: '1.256359, -74.523696',
+            department: "PUTUMAYO",
+            city: userEditing?.city || '',
+            number_assigned: userEditing?.city || '25',
+            user_register_id: userEditing?.user_register_id || '1',//convertir dato a entero en backend
         })
-        setSelectedMunicipality(userEditing?.municipality || '',)
+        setselectedCity(userEditing?.city || '',)
     }, [visible])
 
 
     const handleSubmitUser = async (isEdit) => {
+
         if (Object.values(userData).includes('')) {
-            setIsFormEmpty('Todos los campos son obligatorios')
+            setIsFormEmpty(`Todos los campos son obligatorios`)
             setTimeout(() => {
                 setIsFormEmpty('')
             }, 3000)
             return
-        } 
-            
-        if(isEdit){
-            await handleUpdateUser({...userData})
+        }
+
+        const isOnline = await handleSync()
+        const is_synced = isOnline ? '1' : '0'
+
+        if (isEdit) {
+            await handleUpdateUser({ ...userData, is_synced })
             onClose()
-        }else{
-            await handleSaveUser({ ...userData })
+        } else {
+            await handleSaveUser({ ...userData, is_synced })
             onClose()
         }
-        
+
     }
 
-    const getUserToDelete = async(id)=>{
+    const getUserToDelete = async (id) => {
         Alert.alert(
             "Confirmar eliminación",
             "¿Deseas eliminar este usuario?",
             [
                 {
                     text: "Cancelar",
-                    style: "cancel",   
+                    style: "cancel",
                 },
                 {
                     text: "Eliminar",
@@ -92,7 +106,7 @@ export default function AddUserModal({ onClose, visible, userEditing }) {
                 }
             ]
         );
-        
+
     }
     return (
         <Modal visible={visible} onRequestClose={onClose} transparent animationType="fade" >
@@ -105,15 +119,15 @@ export default function AddUserModal({ onClose, visible, userEditing }) {
                     <ScrollView>
                         <View>
                             <Input value={userData.name} onChangeText={(text) => handleChange('name', text)} placeholder="Nombres" />
-                            <Input value={userData.lastName} onChangeText={(text) => handleChange('lastName', text)} placeholder="Apellidos" />
-                            <Input value={userData.idNumber} onChangeText={(text) => handleChange('idNumber', text)} placeholder="No. Cédula" />
-                            <Input value={userData.phoneNumber} onChangeText={(text) => handleChange('phoneNumber', text)} placeholder="Celular" />
+                            <Input value={userData.last_name} onChangeText={(text) => handleChange('last_name', text)} placeholder="Apellidos" />
+                            <Input value={userData.document_number} onChangeText={(text) => handleChange('document_number', text)} placeholder="No. Cédula" />
+                            <Input value={userData.cellphone} onChangeText={(text) => handleChange('cellphone', text)} placeholder="Celular" />
 
                             <ListItem.Accordion
                                 content={
                                     <ListItem.Content>
                                         <ListItem.Title>Municipio</ListItem.Title>
-                                        <ListItem.Subtitle>{selectedMunicipality ? selectedMunicipality : 'Elige un municipio'}</ListItem.Subtitle>
+                                        <ListItem.Subtitle>{selectedCity ? selectedCity : 'Elige un municipio'}</ListItem.Subtitle>
                                     </ListItem.Content>
                                 }
                                 isExpanded={expanded}
@@ -123,14 +137,14 @@ export default function AddUserModal({ onClose, visible, userEditing }) {
                                 <ListItem>
                                     <ListItem.Content>
                                         {municipalities.map(name => (
-                                            <ListItem.Title onPress={() => [setSelectedMunicipality(name), setExpanded(false)]} style={styles.nameMunicipality} key={name}>{name}</ListItem.Title>
+                                            <ListItem.Title onPress={() => [setselectedCity(name), setExpanded(false)]} style={styles.nameCity} key={name}>{name}</ListItem.Title>
                                         ))}
 
                                     </ListItem.Content>
                                 </ListItem>
                             </ListItem.Accordion>
 
-                            <Input value={userData.direction} onChangeText={(text) => handleChange('direction', text)} placeholder="Dirección" />
+                            <Input value={userData.locality} onChangeText={(text) => handleChange('locality', text)} placeholder="Dirección" />
                         </View>
 
                     </ScrollView>
@@ -152,9 +166,9 @@ export default function AddUserModal({ onClose, visible, userEditing }) {
                             title='Eliminar'
                             color='#f84455'
                             radius='lg'
-                            onPress={()=>getUserToDelete(userEditing?.idNumber)}
+                            onPress={() => getUserToDelete(userEditing?.document_number)}
                         />}
-                        
+
                     </View>
                     {isFormEmpty && <Text style={styles.alertText}>{isFormEmpty}</Text>}
 
@@ -193,7 +207,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center'
     },
-    nameMunicipality: {
+    nameCity: {
 
         color: '#00bfa5',
         marginVertical: 3,
