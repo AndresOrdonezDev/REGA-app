@@ -1,33 +1,68 @@
 import { View, Text, StyleSheet } from "react-native"
 import UsePersonsStorage from "../hooks/UsePersonsStorage"
-import { useFocusEffect } from "@react-navigation/native";
-import { useCallback, useState, useEffect } from "react"
+import { useNavigation } from "@react-navigation/native";
+import { useState, useEffect } from "react"
 import { Button, Icon } from '@rneui/themed'
 import Header from "../components/Header";
+import { useToast } from "react-native-toast-notifications";
+
 export default function PendingRecords() {
-    const { handleGetUser, handleSync, pendingRecords } = UsePersonsStorage()
+    const toast = useToast();
+    const { navigate } = useNavigation()
+
+    const { handleGetPersons, handleSync, sendDataServer, handleUpdateLocal } = UsePersonsStorage()
     const [totalPending, setTotalPending] = useState([])
 
     useEffect(() => {
-        const pending = pendingRecords.filter(user => user.is_synced === '0')
-        setTotalPending(pending)
-    }, [pendingRecords])
+        getTotalRecords()
+    }, []);
 
-    useFocusEffect(
-        useCallback(() => {
-            const fetchData = async () => {
-                await handleGetUser();
-                await handleSync();
-            };
-            fetchData().catch(null);
-        }, [handleGetUser, handleSync])
-    );
 
-    
+    const getTotalRecords = async () => {
+        const total = await handleGetPersons()
+        const totalSynced = total.filter(person => person.is_synced === '0')
+        setTotalPending(totalSynced)
+    }
+
+    const handleSyncData = async () => {
+        const isConnected = await handleSync()
+
+        if (isConnected) {
+
+            if (totalPending.length) {
+
+                for (const person of totalPending) {
+                    await updateRecords(person);
+                }
+                navigate('usersList')
+                return toast.show("Actualización Exitosa 🚀", { type: "success", style: { backgroundColor: "#00bfa5" } });
+            }
+
+            return toast.show("Todo esta sincronizado ✅", { type: "warning" });
+        } else {
+            return toast.show("No hay conexión 📡", { type: "danger" });
+        }
+    }
+
+    const updateRecords = async (person) => {
+        try {
+           
+            const { data } = await sendDataServer({ ...person, is_synced: '1' })
+            if (data.id) {
+                await handleUpdateLocal({ ...person, is_synced: '1' })
+            } else {
+                await handleUpdateLocal({ ...person, is_synced: '0' })
+            }
+
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
     return (
 
         <View style={styles.pendingContainer}>
-            <Header />
+            <Header totalPersons={totalPending.length} />
             <View style={styles.pendingHeading}>
                 <View style={styles.leftContainer}>
                     <Text style={styles.userLegend} >Sincronizar Registros</Text>
@@ -38,15 +73,15 @@ export default function PendingRecords() {
                             <Icon name='sync' color='#fff' />
                         }
                         radius='lg' color='#00bfa5'
-
+                        onPress={() => handleSyncData()}
                     />
                 </View>
             </View>
             <View style={styles.pendingCard}>
-                {totalPending.map((user,index) => (
+                {totalPending.map((user, index) => (
                     <View style={styles.userListItems} key={user.document_number}>
                         <View style={{ flex: 2, flexDirection: 'row', alignItems: "center", }}>
-                            <View style={{ width: 20, height: 20, backgroundColor: '#fff', marginRight: 10, borderRadius: 50 }}>
+                            <View style={{ width: 20, height: 20, backgroundColor: '#fff', marginRight: 10, borderRadius: 50 }} >
                                 <Text style={{ textAlign: 'center' }}>{index + 1}</Text>
                             </View>
                             <View>
@@ -55,7 +90,7 @@ export default function PendingRecords() {
                                 <Text style={styles.userItemText}>{user.locality} - {user.city}</Text>
                             </View>
                         </View>
-                        
+
                     </View>
                 ))}
             </View>
@@ -86,8 +121,8 @@ const styles = StyleSheet.create({
     userLegend: {
         fontSize: 20
     },
-    pendingCard:{
-        paddingHorizontal:20
+    pendingCard: {
+        paddingHorizontal: 20
     },
     userListItems: {
         padding: 10,
@@ -101,6 +136,6 @@ const styles = StyleSheet.create({
     userItemText: {
         color: '#333333',
         fontWeight: 'bold',
-        marginVertical:1
+        marginVertical: 1
     }
 })

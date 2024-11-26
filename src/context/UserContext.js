@@ -21,7 +21,6 @@ export const UserProvider = ({ children }) => {
     setUser(null); // Limpiar usuario del estado
   };
 
-  
   return (
     <UserContext.Provider value={{ user, setUser, logout }}>
       {children}

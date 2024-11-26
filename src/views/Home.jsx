@@ -1,8 +1,8 @@
 import { View, StyleSheet, Text } from "react-native";
-import { useFocusEffect, useNavigation } from '@react-navigation/native'
+import { useNavigation } from '@react-navigation/native'
 import { Button, Icon } from '@rneui/themed'
 import UsePersonsStorage from "../hooks/UsePersonsStorage";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 //components
 import Header from "../components/Header";
@@ -11,8 +11,8 @@ import ProgressChart from "../components/ProgressChart";
 export default function Home() {
 
     const { navigate } = useNavigation()
-    const {totalUserLocal, handleGetUser, handleSync} = UsePersonsStorage()
-   
+    const { handleGetPersons} = UsePersonsStorage()
+    const [totalRecords, setTotalRecords] = useState(0)
 
     const assignedRecords = 100
 
@@ -20,21 +20,20 @@ export default function Home() {
         navigate('usersList')
     }
 
+
+    useEffect(() => {
+        getTotalRecords() 
+             
+    },[]);
+
+    const getTotalRecords = async () => {
+        const total = await handleGetPersons()                
+        setTotalRecords(total.length)
+    }
     
-
-    useFocusEffect(
-        useCallback(() => {
-            const fetchData = async () => {
-                await handleGetUser();
-                await handleSync();
-            };
-            fetchData().catch(null);
-        }, [handleGetUser, handleSync])
-    );
-
     return (
         <View style={styles.container}>
-            <Header />
+            <Header totalPersons={totalRecords}/>
             <View style={styles.usersContainer}>
                 <View style={styles.leftContainer}>
                     <Text style={styles.userLegend} >Usuarios </Text>
@@ -50,8 +49,8 @@ export default function Home() {
                 </View>
             </View>
             <View>
-                <ProgressChart assignedRecords={assignedRecords} totalUserLocal={totalUserLocal}/>
-            </View>  
+                <ProgressChart assignedRecords={assignedRecords} totalUserLocal={totalRecords} />
+            </View>
         </View>
     )
 }

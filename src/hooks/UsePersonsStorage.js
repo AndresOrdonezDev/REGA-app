@@ -6,82 +6,75 @@ import ApiService from "../services/ApiService";
 const USER_LOCAL_KEY = '@My-persons-local';
 
 export default function UsePersonsStorage() {
-    const [totalUserLocal, setTotalUserLocal] = useState(0)
-    const [pendingRecords, setPendingRecords ] = useState([])
-    const [totalPending, setTotalPending] = useState(0)
 
-    useEffect(()=>{
-        const pending = pendingRecords.filter(user => user.is_synced === '0')
-        setTotalPending(pending.length)    
-    },[pendingRecords] )
+    const [totalPersonsLocal, setTotalPersonLocal] = useState([])
+    const toast = useToast();
+
+    let persons = []
 
     const handleSync = useCallback(async () => {
         const { isConnected } = await NetInfo.fetch();
         return isConnected;
     }, []);
 
-    const toast = useToast();
-
-    const handleSaveUser = useCallback(async (data) => {
+    
+    const handleSavePerson = useCallback(async (person) => {
         try {
-            const currentSavedUsers = await AsyncStorage.getItem(USER_LOCAL_KEY);
-            const parsedUsers = currentSavedUsers ? JSON.parse(currentSavedUsers) : [];
-            const updatedUsers = Array.isArray(parsedUsers) ? [...parsedUsers, data] : [data];
-            await AsyncStorage.setItem(USER_LOCAL_KEY, JSON.stringify(updatedUsers));
-            return toast.show("Registro Guardado con éxito 👌", {
-                type: "success",
-                style: { backgroundColor: "#00bfa5" },
-            });
+            const { is_synced } = person
+            if (is_synced === '1') {
+                await sendDataServer(person)
+                await handleSaveRecordLocal(person)
+            } else {
+                await handleSaveRecordLocal(person)
+            }
+            await handleGetPersons()
         } catch (error) {
             console.error("Error al guardar el Registro:", error);
             return toast.show("Error al guardar el Registro", { type: "error" });
         }
     }, []);
 
-    const handleGetUser = useCallback(async () => {
+    const handleGetPersons =async () => {
         try {
             const usersLocal = await AsyncStorage.getItem(USER_LOCAL_KEY);
             if (usersLocal) {
                 const usersParsed = JSON.parse(usersLocal);
-                setTotalUserLocal(usersParsed.length);
-                setPendingRecords(usersParsed);
+                persons = usersParsed
                 return usersParsed;
             }
+
+            setTotalPersonLocal(persons)
             return [];
         } catch (error) {
             console.error("Error al obtener los registros:", error);
             return [];
         }
-    }, []);
+    };
 
-    const handleUpdateUser = async (data) => {
+    const handleUpdatePerson = async (person, prevSynced) => {
         try {
-            const currentSavedUsers = await AsyncStorage.getItem(USER_LOCAL_KEY)
-            const parsedUsers = JSON.parse(currentSavedUsers)
 
-            const userIndex = parsedUsers.findIndex(user => user.document_number === data.document_number)
-
-            if (userIndex === -1) {
-                return toast.show('Persona no encontrada', { type: 'error' })
+            const { is_synced, document_number } = person
+            if (is_synced === '1') {
+                if (!prevSynced) {
+                    await sendDataServer(person)
+                } else {
+                    await updatePersonServer(document_number, person)
+                }
+                await handleUpdateLocal(person)
+            } else {
+                await handleUpdateLocal(person)
             }
-
-            parsedUsers[userIndex] = {
-                ...parsedUsers[userIndex],
-                ...data
-            }
-
-            await AsyncStorage.setItem(USER_LOCAL_KEY, JSON.stringify(parsedUsers))
-            return toast.show('Registro actualizado correctamente 😉', { type: 'success', style: { backgroundColor: "#00bfa5" } })
-
+           // await handleGetPersons()
         } catch (error) {
             console.error(error)
-            return toast.show("Error al actualizar", { type: "error" });
+            return toast.show("Error al actualizar 😨", { type: "danger" });
         }
     }
 
     const handleDeleteUser = async (document_number) => {
         try {
-            console.log('documet_number', document_number )
+            console.log('documet_number', document_number)
             const currentSavedUsers = await AsyncStorage.getItem(USER_LOCAL_KEY)
             const parsedUsers = JSON.parse(currentSavedUsers)
             const userIndex = parsedUsers.findIndex(user => user.document_number === document_number)
@@ -94,32 +87,67 @@ export default function UsePersonsStorage() {
             const updatedUsers = parsedUsers.filter(user => user.document_number !== document_number)
 
             await AsyncStorage.setItem(USER_LOCAL_KEY, JSON.stringify(updatedUsers))
-            return toast.show('Registro eliminado correctamente', { type: 'success', style: { backgroundColor: "#00bfa5" }  })
+
+            await handleGetPersons()
+            return toast.show('Registro eliminado correctamente', { type: 'success', style: { backgroundColor: "#00bfa5" } })
         } catch (error) {
             console.error(error)
             return toast.show("Error al eliminar", { type: "error" });
         }
     }
 
-    const sendDataServer = async(data)=>{
-        await ApiService.createPerson(data)
+    async function sendDataServer(person) {
+        const { data } = await ApiService.createPerson(person)
+        return data
+    }
+
+    async function updatePersonServer(document_number, person) {
+        const { data } = await ApiService.updatePerson(document_number, person)
+        return data
+    }
+
+    async function handleSaveRecordLocal(data) {
+        const currentSavedUsers = await AsyncStorage.getItem(USER_LOCAL_KEY);
+        const parsedUsers = currentSavedUsers ? JSON.parse(currentSavedUsers) : [];
+        const updatedUsers = Array.isArray(parsedUsers) ? [...parsedUsers, data] : [data];
+        await AsyncStorage.setItem(USER_LOCAL_KEY, JSON.stringify(updatedUsers));
+        return toast.show("Registro Guardado con éxito 👌", {
+            type: "success",
+            style: { backgroundColor: "#00bfa5" },
+        });
+    }
+
+    async function handleUpdateLocal(data) {
+        const currentSavedUsers = await AsyncStorage.getItem(USER_LOCAL_KEY)
+        const parsedUsers = JSON.parse(currentSavedUsers)
+
+        const userIndex = parsedUsers.findIndex(user => user.document_number === data.document_number)
+
+        if (userIndex === -1) {
+            return toast.show('Persona no encontrada', { type: 'error' })
+        }
+        parsedUsers[userIndex] = {
+            ...parsedUsers[userIndex],
+            ...data
+        }
+        await AsyncStorage.setItem(USER_LOCAL_KEY, JSON.stringify(parsedUsers))
+        return toast.show('Registro actualizado correctamente 😉', { type: 'success', style: { backgroundColor: "#00bfa5" } })
     }
 
     // only use to tests
     // const resetApp = async()=>{
     //     await AsyncStorage.setItem(USER_LOCAL_KEY, JSON.stringify([]));
-    //     await handleGetUser()
+    //     await handleGetPersons()
     // }
 
     return {
-        handleSaveUser,
-        handleGetUser,
-        handleUpdateUser,
+        handleSavePerson,
+        handleGetPersons,
+        handleUpdatePerson,
+        handleUpdateLocal,
         handleDeleteUser,
         handleSync,
         sendDataServer,
-        totalUserLocal,
-        pendingRecords,
-        totalPending
+        totalPersonsLocal,
     };
 }

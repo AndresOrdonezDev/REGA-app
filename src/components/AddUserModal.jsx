@@ -5,7 +5,7 @@ import UsePersonsStorage from "../hooks/UsePersonsStorage";
 
 export default function AddUserModal({ onClose, visible, userEditing }) {
 
-    const { handleSaveUser, handleUpdateUser, handleDeleteUser, handleSync } = UsePersonsStorage()
+    const { handleSavePerson, handleUpdatePerson, handleDeleteUser, handleSync, handleGetPersons } = UsePersonsStorage()
     const [expanded, setExpanded] = useState(false)
     const [selectedCity, setselectedCity] = useState('')
 
@@ -77,17 +77,38 @@ export default function AddUserModal({ onClose, visible, userEditing }) {
             return
         }
 
+        if(!isEdit){
+            if(await isExistPerson(userData.document_number)){
+                setIsFormEmpty('Persona ya registrada')
+                setTimeout(() => {
+                    setIsFormEmpty('')
+                }, 3000)
+    
+                return
+            }
+            return
+        }
+
         const isOnline = await handleSync()
         const is_synced = isOnline ? '1' : '0'
 
         if (isEdit) {
-            await handleUpdateUser({ ...userData, is_synced })
+            const prevSynced = userEditing.is_synced === '0' ? false : true
+            
+            await handleUpdatePerson({ ...userData, is_synced }, prevSynced)
             onClose()
         } else {
-            await handleSaveUser({ ...userData, is_synced })
+            await handleSavePerson({ ...userData, is_synced })
             onClose()
         }
 
+    }
+
+    const isExistPerson = async (document_number) => {
+        const total = await handleGetPersons()
+        const existPerson = total.some(person => person.document_number === document_number);
+        console.log('bandera ',existPerson )
+        return existPerson
     }
 
     const getUserToDelete = async (id) => {

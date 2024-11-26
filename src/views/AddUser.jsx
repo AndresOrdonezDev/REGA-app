@@ -8,7 +8,7 @@ import UserListItems from "../components/UserListItem";
 import UsePersonsStorage from "../hooks/UsePersonsStorage";
 
 export default function AddUser() {
-    const { handleGetUser } = UsePersonsStorage()
+    const { handleGetPersons } = UsePersonsStorage()
     const [showModal, setShowModal] = useState(false)
     const [usersLocal, setUsersLocal] = useState([])
     const [filteredUsers, setFilteredUsers] = useState([]);
@@ -16,7 +16,6 @@ export default function AddUser() {
 
     useEffect(() => {
         getAllUsers();
-        
     }, []);
 
     const handleModalClose = async () => {
@@ -27,7 +26,7 @@ export default function AddUser() {
 
     const getAllUsers = async () => {
         try {
-            const getUsers = await handleGetUser()
+            const getUsers = await handleGetPersons()
             setFilteredUsers(getUsers)
             return setUsersLocal(getUsers)
         } catch (error) {
@@ -58,7 +57,7 @@ export default function AddUser() {
 
     return (
         <View style={styles.container} >
-            <Header />
+            <Header totalPersons={usersLocal.length}/>
 
             <View style={styles.usersContainer}>
                 <View style={styles.leftContainer}>

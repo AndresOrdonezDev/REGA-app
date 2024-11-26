@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { Button, Icon, Input } from "@rneui/themed";
+import { Button, Icon, Input,Image } from "@rneui/themed";
 import { useToast } from "react-native-toast-notifications";
 import ApiService from "../services/ApiService";
 
@@ -35,19 +35,25 @@ export default function Register({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Registrarse</Text>
+      <View style={[styles.loginContainer, { alignItems: 'center' }]}>
+        <Image
+          source={require('../../assets/logos/rega.png')}
+          style={styles.logo}
+        />
+        <Text style={styles.title}>Registrar cuenta</Text>
+      </View>
 
       <View style={styles.form}>
         <Input
           placeholder="Nombre"
-          leftIcon={<Icon name="person" color="#777" />}
+          leftIcon={<Icon name="person-outline" color="#00bfa5" />}
           value={form.name}
           onChangeText={(text) => handleChange("name", text)}
           containerStyle={styles.input}
         />
         <Input
           placeholder="Apellido"
-          leftIcon={<Icon name="person" color="#777" />}
+          leftIcon={<Icon name="person-outline" color="#00bfa5" />}
           value={form.last_name}
           onChangeText={(text) => handleChange("last_name", text)}
           containerStyle={styles.input}
@@ -55,7 +61,7 @@ export default function Register({ navigation }) {
         <Input
           placeholder="Número de Teléfono"
           keyboardType="phone-pad"
-          leftIcon={<Icon name="phone" color="#777" />}
+          leftIcon={<Icon name="phone" color="#00bfa5" />}
           value={form.cellphone}
           onChangeText={(text) => handleChange("cellphone", text)}
           containerStyle={styles.input}
@@ -63,7 +69,7 @@ export default function Register({ navigation }) {
         <Input
           placeholder="Contraseña"
           secureTextEntry
-          leftIcon={<Icon name="lock" color="#777" />}
+          leftIcon={<Icon name="lock-outline" color="#00bfa5" />}
           value={form.password}
           onChangeText={(text) => handleChange("password", text)}
           containerStyle={styles.input}
@@ -72,16 +78,11 @@ export default function Register({ navigation }) {
         <Button
           title="Registrarse"
           onPress={handleRegister}
-          buttonStyle={styles.registerButton}
-          icon={<Icon name="person-add" color="#fff" />}
+          radius='10'
+          color='#00bfa5'
         />
 
-        <Button
-          title="Cancelar"
-          onPress={() => navigation.goBack()}
-          buttonStyle={styles.cancelButton}
-          icon={<Icon name="close" color="#fff" />}
-        />
+        <Text onPress={() => navigation.goBack()} style={styles.textLogin}>¿Ya tienes una cuenta? <Text style={{color:'#00bfa5'}}>Iniciar sSesión</Text></Text>
       </View>
     </View>
   );
@@ -117,13 +118,18 @@ const styles = StyleSheet.create({
   },
   registerButton: {
     backgroundColor: "#00bfa5",
-    paddingVertical: 10,
-    borderRadius: 5,
-    marginBottom: 10,
   },
-  cancelButton: {
-    backgroundColor: "#d9534f",
-    paddingVertical: 10,
-    borderRadius: 5,
+  textLogin:{
+    fontWeight:'bold',
+    color:'#333',
+    marginTop:18,
+    textAlign:'right',
+    fontSize:15
   },
+  logo: {
+    width: 120, // Ajusta el tamaño del logo según lo necesites
+    height: 120,
+    marginBottom: 10, // Espacio entre el logo y el nombre de la app
+  }
+  
 });

@@ -1,34 +1,32 @@
-import React, { useCallback, useContext, useState, useEffect } from "react";
-import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
+import React, { useContext, useState, useEffect } from "react";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { View, Text, StyleSheet, Image, TouchableOpacity } from "react-native";
 import { Button, Icon } from "@rneui/themed";
 import { UserContext } from "../context/UserContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import UsePersonsStorage from "../hooks/UsePersonsStorage";
 
-export default function Header() {
 
-  const { goBack, navigate } = useNavigation();
+export default function Header({totalPersons}) {
+  const {handleGetPersons} = UsePersonsStorage()
+  const { navigate } = useNavigation();
   const { name } = useRoute();
-  const { user, setUser } = useContext(UserContext); // Obtener usuario del contexto
+  const { user, setUser } = useContext(UserContext);
   const [menuVisible, setMenuVisible] = useState(false);
-  const { handleGetUser, handleSync, pendingRecords } = UsePersonsStorage()
-  const [totalPending, setTotalPending] = useState([])
+  const [totalPending, setTotalPending] = useState(0)
+
 
   useEffect(() => {
-    const pending = pendingRecords.filter(user => user.is_synced === '0')
-    setTotalPending(pending)
-  }, [pendingRecords])
+    getTotalRecords()
+  },[totalPersons]);
 
-  useFocusEffect(
-    useCallback(() => {
-      const fetchData = async () => {
-        await handleGetUser();
-        await handleSync();
-      };
-      fetchData().catch(null);
-    }, [handleGetUser, handleSync])
-  );
+  const getTotalRecords = async () => {
+    const total = await handleGetPersons()
+    const totalSynced = total.filter(person => person.is_synced === '0').length    
+    setTotalPending(totalSynced)
+  }
+
+
   useEffect(() => {
     const fetchUser = async () => {
       if (!user || !user.user) {
@@ -57,6 +55,10 @@ export default function Header() {
     navigate("pendingRecords")
   }
 
+  const handleHome= () => {
+    navigate("Home")
+  }
+
   const navigateToAdminUsers = () => {
     setMenuVisible(false); // Cerrar el menú
     navigate("Panel"); // Redirigir al Panel de Administración
@@ -68,7 +70,7 @@ export default function Header() {
       {name !== "Home" && (
         <View style={styles.arrowContainer}>
           <Button
-            onPress={() => goBack()}
+            onPress={() => handleHome()}
             icon={<Icon name="arrow-back" color="#333333" />}
             color="transparent"
           />
@@ -95,9 +97,9 @@ export default function Header() {
           onPress={() => handlePendingRecords()}
         >
           <Icon name="sync" size={24} color="#00bfa5" />
-          {totalPending.length > 0 && (
+          {totalPending > 0 && (
             <View style={styles.badge}>
-              <Text style={styles.badgeText}>{totalPending.length}</Text>
+              <Text style={styles.badgeText}>{totalPending}</Text>
             </View>
           )}
         </TouchableOpacity>
@@ -111,6 +113,7 @@ export default function Header() {
         </TouchableOpacity>
         {menuVisible && (
           <View style={styles.card}>
+            
             <TouchableOpacity onPress={navigateToAdminUsers} style={styles.menuItem}>
               <Text style={styles.menuText}>Admin</Text>
               <Button
@@ -123,7 +126,7 @@ export default function Header() {
               <Text style={styles.menuText}>salir</Text>
               <Button
                 color='transparent'
-                
+
                 icon={<Icon name="logout" color="#fff" />}
               />
             </TouchableOpacity>
@@ -209,28 +212,28 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
   },
-  menuItem:{
-    flex: 1, 
-    alignContent: 'center', 
-    alignItems: 'center', 
-    justifyContent: "center", 
-    flexDirection: 'row', 
-    backgroundColor: '#00bfa5', 
+  menuItem: {
+    flex: 1,
+    alignContent: 'center',
+    alignItems: 'center',
+    justifyContent: "center",
+    flexDirection: 'row',
+    backgroundColor: '#00bfa5',
     borderRadius: 15
   },
-  menuLogout:{
-    flex: 1, 
-    alignContent: 'center', 
-    alignItems: 'center', 
-    justifyContent: "center", 
-    flexDirection: 'row', 
-    backgroundColor: '#00bfa5', 
+  menuLogout: {
+    flex: 1,
+    alignContent: 'center',
+    alignItems: 'center',
+    justifyContent: "center",
+    flexDirection: 'row',
+    backgroundColor: '#00bfa5',
     borderRadius: 15,
     marginTop: 15
   },
-  menuText:{
-    flex: 1, 
-    paddingLeft: 15, 
+  menuText: {
+    flex: 1,
+    paddingLeft: 15,
     color: '#fff'
   }
 });

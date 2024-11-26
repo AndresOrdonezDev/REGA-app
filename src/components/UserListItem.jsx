@@ -5,7 +5,8 @@ import { Button, Icon } from '@rneui/themed'
 export default function userListItems({user, index, getIdUser}) {
 
     const {name, last_name, cellphone, locality,document_number, city  } = user
-
+    
+    
     return (
         <View style={styles.userListItems}>
             <View style={{ flex: 2, flexDirection: 'row', alignItems: "center", }}>
