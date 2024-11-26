@@ -77,18 +77,7 @@ export default function AddUserModal({ onClose, visible, userEditing }) {
             return
         }
 
-        if(!isEdit){
-            if(await isExistPerson(userData.document_number)){
-                setIsFormEmpty('Persona ya registrada')
-                setTimeout(() => {
-                    setIsFormEmpty('')
-                }, 3000)
-    
-                return
-            }
-            return
-        }
-
+        
         const isOnline = await handleSync()
         const is_synced = isOnline ? '1' : '0'
 
@@ -97,7 +86,16 @@ export default function AddUserModal({ onClose, visible, userEditing }) {
             
             await handleUpdatePerson({ ...userData, is_synced }, prevSynced)
             onClose()
+
         } else {
+            if(await isExistPerson(userData.document_number)){
+                setIsFormEmpty('Persona ya registrada')
+                setTimeout(() => {
+                    setIsFormEmpty('')
+                }, 3000)
+    
+                return
+            }
             await handleSavePerson({ ...userData, is_synced })
             onClose()
         }
@@ -107,7 +105,6 @@ export default function AddUserModal({ onClose, visible, userEditing }) {
     const isExistPerson = async (document_number) => {
         const total = await handleGetPersons()
         const existPerson = total.some(person => person.document_number === document_number);
-        console.log('bandera ',existPerson )
         return existPerson
     }
 

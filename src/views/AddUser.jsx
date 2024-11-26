@@ -85,7 +85,7 @@ export default function AddUser() {
                 </View>
             </View>
             <Text style={styles.userListTitle}>Usuarios Registrados: {usersLocal.length}</Text>
-            <ScrollView style={{marginBottom:15}}>
+            <ScrollView style={{marginBottom:15, paddingHorizontal:10}}>
 
                 {filteredUsers?.map((user, index) => (
                     <UserListItems index={index} user={user} key={index} getIdUser ={handleGetIdUser}/>
@@ -109,7 +109,8 @@ const styles = StyleSheet.create({
     usersContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginVertical: 24
+        marginVertical: 24,
+        paddingHorizontal:10
     },
     leftContainer: {
         flex: 1,

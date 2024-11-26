@@ -64,7 +64,8 @@ const styles = StyleSheet.create({
     usersContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginVertical: 24
+        marginVertical: 24,
+        paddingHorizontal:10
     },
     leftContainer: {
         flex: 1,
