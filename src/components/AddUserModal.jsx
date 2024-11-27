@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { View, Text, Modal, StyleSheet, ScrollView, Alert } from "react-native";
 import { Button, Icon, Input, ListItem } from '@rneui/themed'
 import UsePersonsStorage from "../hooks/UsePersonsStorage";
+import { UserContext } from "../context/UserContext";
 
-export default function AddUserModal({ onClose, visible, userEditing }) {
-
+export default function AddUserModal({ onClose, visible, userEditing, totalRecords }) {
+    const { user } = useContext(UserContext);
     const { handleSavePerson, handleUpdatePerson, handleDeleteUser, handleSync, handleGetPersons } = UsePersonsStorage()
     const [expanded, setExpanded] = useState(false)
     const [selectedCity, setselectedCity] = useState('')
@@ -19,8 +20,8 @@ export default function AddUserModal({ onClose, visible, userEditing }) {
         ubication: "1.256359, -74.523696",
         department: "PUTUMAYO",
         city: "",
-        number_assigned: "25",
-        user_register_id: "1",//convertir dato a entero en backend
+        number_assigned: "",
+        //user_register_id: "1",//convertir dato a entero en backend
     })
     const [isFormEmpty, setIsFormEmpty] = useState('')
     const municipalities = [
@@ -60,14 +61,15 @@ export default function AddUserModal({ onClose, visible, userEditing }) {
             ubication: '1.256359, -74.523696',
             department: "PUTUMAYO",
             city: userEditing?.city || '',
-            number_assigned: userEditing?.city || '25',
-            user_register_id: userEditing?.user_register_id || '1',//convertir dato a entero en backend
+            number_assigned: userEditing?.city || '',
+
         })
         setselectedCity(userEditing?.city || '',)
     }, [visible])
 
 
     const handleSubmitUser = async (isEdit) => {
+
 
         if (Object.values(userData).includes('')) {
             setIsFormEmpty(`Todos los campos son obligatorios`)
@@ -77,26 +79,37 @@ export default function AddUserModal({ onClose, visible, userEditing }) {
             return
         }
 
-        
+        const user_register_id = user.user.id
+
         const isOnline = await handleSync()
         const is_synced = isOnline ? '1' : '0'
 
         if (isEdit) {
             const prevSynced = userEditing.is_synced === '0' ? false : true
-            
-            await handleUpdatePerson({ ...userData, is_synced }, prevSynced)
+
+            await handleUpdatePerson({ ...userData, is_synced, user_register_id }, prevSynced)
             onClose()
 
         } else {
-            if(await isExistPerson(userData.document_number)){
+            if (await isExistPerson(userData.document_number)) {
                 setIsFormEmpty('Persona ya registrada')
                 setTimeout(() => {
                     setIsFormEmpty('')
                 }, 3000)
-    
+
                 return
             }
-            await handleSavePerson({ ...userData, is_synced })
+
+            if (+user.user.range <= +totalRecords) {
+
+                setIsFormEmpty('Ya registraste todos los asignados')
+                setTimeout(() => {
+                    setIsFormEmpty('')
+                }, 3000)
+                return
+            }
+
+            await handleSavePerson({ ...userData, is_synced, user_register_id })
             onClose()
         }
 
@@ -163,6 +176,7 @@ export default function AddUserModal({ onClose, visible, userEditing }) {
                             </ListItem.Accordion>
 
                             <Input value={userData.locality} onChangeText={(text) => handleChange('locality', text)} placeholder="Dirección" />
+                            <Input value={userData.number_assigned} onChangeText={(text) => handleChange('number_assigned', text)} placeholder="Número Boleta" />
                         </View>
 
                     </ScrollView>

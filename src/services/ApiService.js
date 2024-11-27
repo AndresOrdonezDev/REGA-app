@@ -33,11 +33,8 @@ export default {
     },
 
     //request process admin
-    sendWhatsApps(cellphones, message) {
-        return api.post("/persons/send-whatsapp", {
-            cellphones: cellphones,
-            message: message   
-        });
+    sendWhatsApps(data) {
+        return api.post("/persons/send-whatsapp", data);
     } 
 
     

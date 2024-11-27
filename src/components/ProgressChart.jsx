@@ -1,14 +1,19 @@
 import { View, Text, StyleSheet } from "react-native";
 import CircularProgress from 'react-native-circular-progress-indicator';
+import { round } from "react-native-redash";
 
 export default function ProgressChart({ assignedRecords, totalUserLocal }) {
+    let total = 0    
+    if(assignedRecords > 0){
+        total = (totalUserLocal / assignedRecords)
+    }
 
     return (
         <View>
             <View style={styles.chartContainer}>
                 
                 <CircularProgress
-                    value={(totalUserLocal / assignedRecords) * 100}
+                    value={total * 100}
                     valueSuffix={'%'}
                     radius={120}
                     duration={500}
@@ -24,7 +29,7 @@ export default function ProgressChart({ assignedRecords, totalUserLocal }) {
                 <Text style={styles.chartInfoTitle}>Historial de registros</Text>
                 <Text style={styles.chartInfoText}>Asignados: <Text style={styles.span}>{assignedRecords}</Text> </Text>
                 <Text style={styles.chartInfoText}>Registrados: <Text style={styles.span}>{totalUserLocal}</Text> </Text>
-                <Text style={styles.chartInfoText}>Pendientes: <Text style={styles.span}>{assignedRecords - totalUserLocal}</Text> </Text>
+                <Text style={styles.chartInfoText}>Pendientes: <Text style={styles.span}>{round(assignedRecords - totalUserLocal)}</Text> </Text>
 
             </View>
         </View>

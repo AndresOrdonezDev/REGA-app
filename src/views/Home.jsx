@@ -1,20 +1,21 @@
+import { useEffect, useState, useContext } from "react";
 import { View, StyleSheet, Text } from "react-native";
 import { useNavigation } from '@react-navigation/native'
 import { Button, Icon } from '@rneui/themed'
+// my functions
 import UsePersonsStorage from "../hooks/UsePersonsStorage";
-import { useEffect, useState } from "react";
-
+import { UserContext } from "../context/UserContext";
 //components
 import Header from "../components/Header";
 import ProgressChart from "../components/ProgressChart";
 
+
 export default function Home() {
-
+    const { user } = useContext(UserContext);
     const { navigate } = useNavigation()
-    const { handleGetPersons} = UsePersonsStorage()
+    const { handleGetPersons, handleGetPersonsAdmin } = UsePersonsStorage()
+    const [totalAssigned, setTotalAssigned] = useState(0)
     const [totalRecords, setTotalRecords] = useState(0)
-
-    const assignedRecords = 100
 
     const handleAddUser = () => {
         navigate('usersList')
@@ -22,18 +23,25 @@ export default function Home() {
 
 
     useEffect(() => {
-        getTotalRecords() 
-             
-    },[]);
+        validateRolUser()
+    }, [user]);
 
-    const getTotalRecords = async () => {
-        const total = await handleGetPersons()                
-        setTotalRecords(total.length)
+
+    const validateRolUser = async () => {
+
+        if (user.user.role_name === 'Registrador') {
+            setTotalAssigned(+user.user.range )
+            const total = await handleGetPersons()
+            return setTotalRecords(total.length)
+        }else{
+            const total = await handleGetPersonsAdmin()
+            return setTotalRecords(total.length)
+        }
     }
-    
+
     return (
         <View style={styles.container}>
-            <Header totalPersons={totalRecords}/>
+            <Header totalPersons={totalRecords} />
             <View style={styles.usersContainer}>
                 <View style={styles.leftContainer}>
                     <Text style={styles.userLegend} >Usuarios </Text>
@@ -49,7 +57,7 @@ export default function Home() {
                 </View>
             </View>
             <View>
-                <ProgressChart assignedRecords={assignedRecords} totalUserLocal={totalRecords} />
+                <ProgressChart assignedRecords={totalAssigned} totalUserLocal={totalRecords} />
             </View>
         </View>
     )
@@ -65,7 +73,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         marginVertical: 24,
-        paddingHorizontal:10
+        paddingHorizontal: 10
     },
     leftContainer: {
         flex: 1,

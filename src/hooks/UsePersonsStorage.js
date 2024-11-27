@@ -4,6 +4,7 @@ import { useToast } from "react-native-toast-notifications";
 import NetInfo from "@react-native-community/netinfo";
 import ApiService from "../services/ApiService";
 const USER_LOCAL_KEY = '@My-persons-local';
+const USER_LOCAL_ADMIN_KEY = '@My-persons-admin-local';
 
 export default function UsePersonsStorage() {
 
@@ -43,6 +44,27 @@ export default function UsePersonsStorage() {
                 return usersParsed;
             }
 
+            setTotalPersonLocal(persons)
+            return [];
+        } catch (error) {
+            console.error("Error al obtener los registros:", error);
+            return [];
+        }
+    };
+    
+    const handleGetPersonsAdmin =async () => {
+        try {
+            if(handleSync()){
+                const {data} = await ApiService.getAllPersons()
+                
+                await AsyncStorage.setItem(USER_LOCAL_ADMIN_KEY, JSON.stringify(data));
+            }
+            const usersLocal = await AsyncStorage.getItem(USER_LOCAL_ADMIN_KEY);
+            if (usersLocal) {
+                const usersParsed = JSON.parse(usersLocal);
+                persons = usersParsed
+                return usersParsed;
+            }
             setTotalPersonLocal(persons)
             return [];
         } catch (error) {
@@ -148,6 +170,7 @@ export default function UsePersonsStorage() {
         handleDeleteUser,
         handleSync,
         sendDataServer,
+        handleGetPersonsAdmin,
         totalPersonsLocal,
     };
 }

@@ -7,7 +7,6 @@ const PERSON_LOCAL_KEY = "@My-users-local";
 export default function UseUsersStorage() {
   const toast = useToast();
 
-  
   // Descargar usuarios desde el servidor y guardar en AsyncStorage
   const handleFetchUsersFromApi = async () => {
     try {
