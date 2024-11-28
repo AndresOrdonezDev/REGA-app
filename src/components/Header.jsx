@@ -5,24 +5,26 @@ import { Button, Icon } from "@rneui/themed";
 import { UserContext } from "../context/UserContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import UsePersonsStorage from "../hooks/UsePersonsStorage";
+import { exportToExcel } from "../helpers/ExportToExcel";
+import { useToast } from "react-native-toast-notifications";
 
-
-export default function Header({totalPersons}) {
-  const {handleGetPersons} = UsePersonsStorage()
+export default function Header({ totalPersons }) {
+  const { handleGetPersons, handleGetPersonsAdmin } = UsePersonsStorage()
   const { navigate } = useNavigation();
   const { name } = useRoute();
   const { user, setUser } = useContext(UserContext);
   const [menuVisible, setMenuVisible] = useState(false);
   const [totalPending, setTotalPending] = useState(0)
 
+  const toast = useToast()
 
   useEffect(() => {
     getTotalRecords()
-  },[totalPersons]);
+  }, [totalPersons]);
 
   const getTotalRecords = async () => {
     const total = await handleGetPersons()
-    const totalSynced = total.filter(person => person.is_synced === '0').length    
+    const totalSynced = total.filter(person => person.is_synced === '0').length
     setTotalPending(totalSynced)
   }
 
@@ -55,7 +57,7 @@ export default function Header({totalPersons}) {
     navigate("pendingRecords")
   }
 
-  const handleHome= () => {
+  const handleHome = () => {
     navigate("Home")
   }
 
@@ -63,6 +65,29 @@ export default function Header({totalPersons}) {
     setMenuVisible(false); // Cerrar el menú
     navigate("Panel"); // Redirigir al Panel de Administración
   };
+
+  const handleExportData = async () => {
+    try {
+      
+      if(user.user.role_name === 'Registrador'){
+        const persons = await handleGetPersons()
+        persons.length && await exportToExcel(persons, "PersonsData.xlsx");
+        return toast.show('Archivo exportado correctamente 👌', { type: 'success', style: { backgroundColor: "#00bfa5" } })
+      }else{
+        const persons = await handleGetPersonsAdmin()
+        persons.length && await exportToExcel(persons, "PersonsData.xlsx");
+        return toast.show('Archivo exportado correctamente 👌', { type: 'success', style: { backgroundColor: "#00bfa5" } })
+      }
+      
+      
+    } catch (error) {
+      toast.show("No se pudo exportar el archivo 😨", { type: "danger" });
+      
+      console.error("Error al exportar los datos:", error);
+    }
+  };
+
+
 
   return (
     <View style={styles.container}>
@@ -113,15 +138,24 @@ export default function Header({totalPersons}) {
         </TouchableOpacity>
         {menuVisible && (
           <View style={styles.card}>
-            
-            <TouchableOpacity onPress={navigateToAdminUsers} style={styles.menuItem}>
+
+            {user?.user?.role_name === 'Administrador' && <TouchableOpacity onPress={navigateToAdminUsers} style={styles.menuItem}>
               <Text style={styles.menuText}>Admin</Text>
               <Button
                 color='transparent'
                 icon={<Icon name="supervisor-account" color="#fff" />}
 
               />
+            </TouchableOpacity>}
+
+            <TouchableOpacity onPress={handleExportData} style={styles.menuLogout}>
+              <Text style={styles.menuText}>Exportar</Text>
+              <Button
+                color="transparent"
+                icon={<Icon name="arrow-down-circle-outline" color="#fff" type="ionicon" />} // Ícono de Excel
+              />
             </TouchableOpacity>
+
             <TouchableOpacity onPress={handleLogout} style={styles.menuLogout}>
               <Text style={styles.menuText}>salir</Text>
               <Button
@@ -229,7 +263,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: '#00bfa5',
     borderRadius: 15,
-    marginTop: 15
+    marginTop: 10
   },
   menuText: {
     flex: 1,

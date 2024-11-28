@@ -15,11 +15,10 @@ export default function ProgressChart({ assignedRecords, totalUserLocal }) {
                 <CircularProgress
                     value={total * 100}
                     valueSuffix={'%'}
-                    radius={120}
+                    radius={100}
                     duration={500}
                     activeStrokeColor={'#00bfa5'}
                     progressValueColor={'#00bfa5'}
-                   
                     titleColor={'#00bfa5'}
                     titleStyle={{ fontWeight: 'bold' }}
                 />
@@ -29,7 +28,7 @@ export default function ProgressChart({ assignedRecords, totalUserLocal }) {
                 <Text style={styles.chartInfoTitle}>Historial de registros</Text>
                 <Text style={styles.chartInfoText}>Asignados: <Text style={styles.span}>{assignedRecords}</Text> </Text>
                 <Text style={styles.chartInfoText}>Registrados: <Text style={styles.span}>{totalUserLocal}</Text> </Text>
-                <Text style={styles.chartInfoText}>Pendientes: <Text style={styles.span}>{round(assignedRecords - totalUserLocal)}</Text> </Text>
+                <Text style={styles.chartInfoText}>Pendientes: <Text style={styles.span}>{round(assignedRecords - totalUserLocal) <= 0 ? 0:round(assignedRecords - totalUserLocal) }</Text> </Text>
 
             </View>
         </View>
@@ -39,13 +38,13 @@ export default function ProgressChart({ assignedRecords, totalUserLocal }) {
 const styles = StyleSheet.create({
     chartContainer: {
         alignItems: 'center',
-        marginTop: 50,
-        marginBottom: 50
+        marginTop: 20,
+        marginBottom: 30
     },
     chartInfo: {
         justifyContent: 'center',
         alignItems: 'center',
-
+        marginBottom: 10
     },
     chartInfoTitle: {
         textAlign: 'center',

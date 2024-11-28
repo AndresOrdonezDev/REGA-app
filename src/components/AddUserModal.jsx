@@ -1,15 +1,19 @@
 import React, { useState, useEffect, useContext } from "react";
-import { View, Text, Modal, StyleSheet, ScrollView, Alert } from "react-native";
+import { View, Text, Modal, StyleSheet, ScrollView, Alert, ActivityIndicator } from "react-native";
 import { Button, Icon, Input, ListItem } from '@rneui/themed'
+import { requestForegroundPermissionsAsync, getCurrentPositionAsync } from 'expo-location'
+//my functions
 import UsePersonsStorage from "../hooks/UsePersonsStorage";
 import { UserContext } from "../context/UserContext";
 
 export default function AddUserModal({ onClose, visible, userEditing, totalRecords }) {
     const { user } = useContext(UserContext);
-    const { handleSavePerson, handleUpdatePerson, handleDeleteUser, handleSync, handleGetPersons } = UsePersonsStorage()
+    const { handleSavePerson, handleUpdatePerson, handleDeleteUser, handleSync, handleGetPersons, handleGetPerson } = UsePersonsStorage()
     const [expanded, setExpanded] = useState(false)
-    const [selectedCity, setselectedCity] = useState('')
-
+    const [selectedCity, setSelectCity] = useState('')
+    const [isLoading, setIsLoading] = useState(false)
+    const [isFormEmpty, setIsFormEmpty] = useState('')
+    const [isPersonDeleted, setIsPersonDeleted] = useState(false)
     const [userData, setUserData] = useState({
 
         document_number: '',
@@ -17,13 +21,11 @@ export default function AddUserModal({ onClose, visible, userEditing, totalRecor
         last_name: "",
         cellphone: "",
         locality: "",
-        ubication: "1.256359, -74.523696",
         department: "PUTUMAYO",
         city: "",
         number_assigned: "",
-        //user_register_id: "1",//convertir dato a entero en backend
     })
-    const [isFormEmpty, setIsFormEmpty] = useState('')
+
     const municipalities = [
         "MOCOA",
         "COLON",
@@ -58,18 +60,21 @@ export default function AddUserModal({ onClose, visible, userEditing, totalRecor
             last_name: userEditing?.last_name || '',
             cellphone: userEditing?.cellphone || '',
             locality: userEditing?.locality || '',
-            ubication: '1.256359, -74.523696',
             department: "PUTUMAYO",
             city: userEditing?.city || '',
             number_assigned: userEditing?.city || '',
 
         })
-        setselectedCity(userEditing?.city || '',)
+        setSelectCity(userEditing?.city || '',)
+        logLocation()
+        
+        setIsPersonDeleted(false)
+        validateToDeletePerson()
     }, [visible])
 
+    
 
     const handleSubmitUser = async (isEdit) => {
-
 
         if (Object.values(userData).includes('')) {
             setIsFormEmpty(`Todos los campos son obligatorios`)
@@ -80,17 +85,18 @@ export default function AddUserModal({ onClose, visible, userEditing, totalRecor
         }
 
         const user_register_id = user.user.id
-
         const isOnline = await handleSync()
         const is_synced = isOnline ? '1' : '0'
 
         if (isEdit) {
+            setIsLoading(true)
             const prevSynced = userEditing.is_synced === '0' ? false : true
-
-            await handleUpdatePerson({ ...userData, is_synced, user_register_id }, prevSynced)
+            const idLocal = userEditing.idLocal
+            await handleUpdatePerson({ ...userData, is_synced, idLocal }, prevSynced)
+            setIsLoading(false)
             onClose()
-
         } else {
+
             if (await isExistPerson(userData.document_number)) {
                 setIsFormEmpty('Persona ya registrada')
                 setTimeout(() => {
@@ -106,10 +112,15 @@ export default function AddUserModal({ onClose, visible, userEditing, totalRecor
                 setTimeout(() => {
                     setIsFormEmpty('')
                 }, 3000)
+
                 return
             }
-
-            await handleSavePerson({ ...userData, is_synced, user_register_id })
+            setIsLoading(true)
+            const ubication = await logLocation()
+            
+            const idLocal = generateUniqueId()
+            await handleSavePerson({ ...userData, is_synced, user_register_id, idLocal, ubication })
+            setIsLoading(false)
             onClose()
         }
 
@@ -133,12 +144,57 @@ export default function AddUserModal({ onClose, visible, userEditing, totalRecor
                 {
                     text: "Eliminar",
                     style: "destructive",
-                    onPress: async () => [await handleDeleteUser(id), onClose()]
+                    onPress: async () => [await handleDeleteUser(id, user?.user?.role_name), onClose()]
                 }
             ]
         );
 
     }
+
+    function generateUniqueId(maxLength = 20) {
+        const timestamp = Date.now().toString(36);
+        const random = Math.random().toString(36).substring(2, 10);
+        const uniqueId = `${timestamp}${random}`;
+        return uniqueId.substring(0, maxLength);
+    }
+
+    async function validateToDeletePerson() {
+        if (userEditing) {
+            const prevSynced = userEditing.is_synced === '0' ? false : true
+            if (prevSynced) {
+                const isOnline = await handleSync()
+                if (isOnline) {
+                    const isPersonOnServer = await handleGetPerson(userEditing?.idLocal)
+                    setIsPersonDeleted(!isPersonOnServer)
+                    return
+
+                }
+            }
+        }
+    }
+
+    async function fetchLocation(){
+        try {
+            const { status } = await requestForegroundPermissionsAsync();
+            if (status !== 'granted') {
+                Alert.alert('Permiso de denegado');
+                return;
+            }
+            const location = await getCurrentPositionAsync({});
+            const { latitude, longitude } =  location.coords;
+            return `${latitude}, ${longitude}`;
+
+        } catch (error) {
+            console.error('Error obteniendo ubicación:', error);
+            Alert.alert('Error', 'No se pudo obtener la ubicación.');
+        } 
+    };
+    async function logLocation() {
+        const coords = await fetchLocation();
+        return coords
+    }
+
+
     return (
         <Modal visible={visible} onRequestClose={onClose} transparent animationType="fade" >
             <View style={styles.container} >
@@ -168,7 +224,7 @@ export default function AddUserModal({ onClose, visible, userEditing, totalRecor
                                 <ListItem>
                                     <ListItem.Content>
                                         {municipalities.map(name => (
-                                            <ListItem.Title onPress={() => [setselectedCity(name), setExpanded(false)]} style={styles.nameCity} key={name}>{name}</ListItem.Title>
+                                            <ListItem.Title onPress={() => [setSelectCity(name), setExpanded(false)]} style={styles.nameCity} key={name}>{name}</ListItem.Title>
                                         ))}
 
                                     </ListItem.Content>
@@ -182,24 +238,35 @@ export default function AddUserModal({ onClose, visible, userEditing, totalRecor
                     </ScrollView>
 
                     <View style={{ alignItems: 'flex-end', justifyContent: 'flex-end', paddingVertical: 10, flexDirection: 'row', gap: 10 }}>
+                        {isLoading && <ActivityIndicator color={userEditing?.idLocal ? '#fe5f2f' : '#00bfa5'} size="large" />}
                         {!userEditing && <Button
                             title='Guardar'
                             color='#00bfa5'
                             radius='lg'
                             onPress={() => handleSubmitUser(false)}
+                            disabled={isLoading}
                         />}
                         {userEditing && <Button
                             title='Editar'
                             color='#fe5f2f'
                             radius='lg'
                             onPress={() => handleSubmitUser(true)}
+                            disabled={isLoading}
                         />}
-                        {userEditing && <Button
+                        {userEditing && user?.user?.role_name === 'Administrador' && <Button
                             title='Eliminar'
                             color='#f84455'
                             radius='lg'
-                            onPress={() => getUserToDelete(userEditing?.document_number)}
+                            onPress={() => getUserToDelete(userEditing?.idLocal)}
                         />}
+                        {isPersonDeleted && user?.user?.role_name === 'Registrador' && <Button
+                            title='Eliminar'
+                            color='#f84455'
+                            radius='lg'
+                            onPress={() => getUserToDelete(userEditing?.idLocal)}
+                        />}
+
+
 
                     </View>
                     {isFormEmpty && <Text style={styles.alertText}>{isFormEmpty}</Text>}

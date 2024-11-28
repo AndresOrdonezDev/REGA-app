@@ -18,7 +18,7 @@ export default function UsePersonsStorage() {
         return isConnected;
     }, []);
 
-    
+
     const handleSavePerson = useCallback(async (person) => {
         try {
             const { is_synced } = person
@@ -35,7 +35,7 @@ export default function UsePersonsStorage() {
         }
     }, []);
 
-    const handleGetPersons =async () => {
+    const handleGetPersons = async () => {
         try {
             const usersLocal = await AsyncStorage.getItem(USER_LOCAL_KEY);
             if (usersLocal) {
@@ -51,12 +51,12 @@ export default function UsePersonsStorage() {
             return [];
         }
     };
-    
-    const handleGetPersonsAdmin =async () => {
+
+    const handleGetPersonsAdmin = async () => {
         try {
-            if(handleSync()){
-                const {data} = await ApiService.getAllPersons()
-                
+            if (handleSync()) {
+                const { data } = await ApiService.getAllPersons()
+
                 await AsyncStorage.setItem(USER_LOCAL_ADMIN_KEY, JSON.stringify(data));
             }
             const usersLocal = await AsyncStorage.getItem(USER_LOCAL_ADMIN_KEY);
@@ -76,55 +76,38 @@ export default function UsePersonsStorage() {
     const handleUpdatePerson = async (person, prevSynced) => {
         try {
 
-            const { is_synced, document_number } = person
+            const { is_synced, idLocal } = person
             if (is_synced === '1') {
                 if (!prevSynced) {
                     await sendDataServer(person)
                 } else {
-                    await updatePersonServer(document_number, person)
+                    await updatePersonServer(idLocal, person)
                 }
                 await handleUpdateLocal(person)
             } else {
                 await handleUpdateLocal(person)
             }
-           // await handleGetPersons()
+            // await handleGetPersons()
         } catch (error) {
             console.error(error)
             return toast.show("Error al actualizar 😨", { type: "danger" });
         }
     }
 
-    const handleDeleteUser = async (document_number) => {
-        try {
-            console.log('documet_number', document_number)
-            const currentSavedUsers = await AsyncStorage.getItem(USER_LOCAL_KEY)
-            const parsedUsers = JSON.parse(currentSavedUsers)
-            const userIndex = parsedUsers.findIndex(user => user.document_number === document_number)
-
-            if (userIndex === -1) {
-                return toast.show('Persona no encontrada', { type: 'error' })
-            }
-
-            // Filter user to delete
-            const updatedUsers = parsedUsers.filter(user => user.document_number !== document_number)
-
-            await AsyncStorage.setItem(USER_LOCAL_KEY, JSON.stringify(updatedUsers))
-
-            await handleGetPersons()
-            return toast.show('Registro eliminado correctamente', { type: 'success', style: { backgroundColor: "#00bfa5" } })
-        } catch (error) {
-            console.error(error)
-            return toast.show("Error al eliminar", { type: "error" });
+    const handleDeleteUser = async (idLocal, userRol) => {
+        
+        if(userRol === 'Administrador'){
+            await deletePersonAdmin(idLocal)
+            await handleGetPersonsAdmin()
+        }else{
+            await deletePersonRegister(idLocal)
+            await handleGetPerson()
         }
+
     }
 
     async function sendDataServer(person) {
         const { data } = await ApiService.createPerson(person)
-        return data
-    }
-
-    async function updatePersonServer(document_number, person) {
-        const { data } = await ApiService.updatePerson(document_number, person)
         return data
     }
 
@@ -139,11 +122,17 @@ export default function UsePersonsStorage() {
         });
     }
 
+    async function updatePersonServer(idLocal, person) {
+        const { data } = await ApiService.updatePerson(idLocal, person)
+        return data
+    }
+
     async function handleUpdateLocal(data) {
+
         const currentSavedUsers = await AsyncStorage.getItem(USER_LOCAL_KEY)
         const parsedUsers = JSON.parse(currentSavedUsers)
 
-        const userIndex = parsedUsers.findIndex(user => user.document_number === data.document_number)
+        const userIndex = parsedUsers.findIndex(user => user.idLocal === data.idLocal)
 
         if (userIndex === -1) {
             return toast.show('Persona no encontrada', { type: 'error' })
@@ -154,6 +143,66 @@ export default function UsePersonsStorage() {
         }
         await AsyncStorage.setItem(USER_LOCAL_KEY, JSON.stringify(parsedUsers))
         return toast.show('Registro actualizado correctamente 😉', { type: 'success', style: { backgroundColor: "#00bfa5" } })
+    }
+
+    async function handleGetPerson(id) {
+        try {
+            const response = await ApiService.getPerson(id);
+            if (response.status === 200) {
+                return true;
+            }
+        } catch (error) {
+            return error.response.data.messages.error === 'Persona no encontrada.' ? false : true;
+        }
+    }
+
+    async function deletePersonAdmin(idLocal) {
+        try {
+            const currentSavedUsers = await AsyncStorage.getItem(USER_LOCAL_ADMIN_KEY)
+            const parsedUsers = JSON.parse(currentSavedUsers)
+            const userIndex = parsedUsers.findIndex(user => user.idLocal === idLocal)
+
+            if (userIndex === -1) {
+                return toast.show('Persona no encontrada 😨', { type: "danger" })
+            }
+
+            // Filter user to delete
+            const { data } = await ApiService.deletePerson(idLocal)
+            if (data.status === 200) {
+                const updatedUsers = parsedUsers.filter(user => user.idLocal !== idLocal)
+                await AsyncStorage.setItem(USER_LOCAL_ADMIN_KEY, JSON.stringify(updatedUsers))
+                return toast.show('Registro eliminado correctamente 😉', { type: 'success', style: { backgroundColor: "#00bfa5" } })
+            } else {
+                return toast.show("Error al eliminar 😨", { type: "error" });
+            }
+
+        } catch (error) {
+            console.error(error)
+            return toast.show("Error al eliminar 😨", { type: "error" });
+        }
+    }
+
+    async function deletePersonRegister(idLocal) {
+        try {
+            const currentSavedUsers = await AsyncStorage.getItem(USER_LOCAL_KEY)
+            const parsedUsers = JSON.parse(currentSavedUsers)
+            const userIndex = parsedUsers.findIndex(user => user.idLocal === idLocal)
+
+            if (userIndex === -1) {
+                return toast.show('Persona no encontrada 😨', { type: "danger" })
+            }
+            // Filter user to delete
+            try {
+                const updatedUsers = parsedUsers.filter(user => user.idLocal !== idLocal)
+                await AsyncStorage.setItem(USER_LOCAL_KEY, JSON.stringify(updatedUsers))
+                return toast.show('Registro eliminado correctamente 😉', { type: 'success', style: { backgroundColor: "#00bfa5" } })
+            } catch (error) {
+                return toast.show("Error al eliminar 😨", { type: "error" });
+            }
+        } catch (error) {
+            console.error(error)
+            return toast.show("Error al eliminar 😨", { type: "error" });
+        }
     }
 
     // only use to tests
@@ -171,6 +220,7 @@ export default function UsePersonsStorage() {
         handleSync,
         sendDataServer,
         handleGetPersonsAdmin,
+        handleGetPerson,
         totalPersonsLocal,
     };
 }

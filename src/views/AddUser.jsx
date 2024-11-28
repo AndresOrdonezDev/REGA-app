@@ -98,7 +98,7 @@ export default function AddUser() {
         } catch (error) {
             console.error(error);
             setIsSending(false);
-            toast.show("No se pudo enviar los mensajes", { type: "danger" });
+            toast.show("No se pudo enviar los mensajes 😨", { type: "danger" });
         }
     }
 

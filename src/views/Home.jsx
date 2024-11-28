@@ -8,7 +8,7 @@ import { UserContext } from "../context/UserContext";
 //components
 import Header from "../components/Header";
 import ProgressChart from "../components/ProgressChart";
-
+import BarHorizontalChart from "../components/BarHorizontalChart";
 
 export default function Home() {
     const { user } = useContext(UserContext);
@@ -16,6 +16,7 @@ export default function Home() {
     const { handleGetPersons, handleGetPersonsAdmin } = UsePersonsStorage()
     const [totalAssigned, setTotalAssigned] = useState(0)
     const [totalRecords, setTotalRecords] = useState(0)
+    const [cityData, setCityData] = useState({ cities: [], counts: [] });
 
     const handleAddUser = () => {
         navigate('usersList')
@@ -32,11 +33,26 @@ export default function Home() {
         if (user.user.role_name === 'Registrador') {
             setTotalAssigned(+user.user.range )
             const total = await handleGetPersons()
+            getAllCities(total)
             return setTotalRecords(total.length)
         }else{
+            setTotalAssigned(+user.user.range )
             const total = await handleGetPersonsAdmin()
+            getAllCities(total)
             return setTotalRecords(total.length)
         }
+    }
+
+    const getAllCities = (data)=>{
+        const cityCount = data.reduce((acc, person) => {
+            const city = person.city || "Desconocida"; // Manejar casos sin ciudad
+            acc[city] = (acc[city] || 0) + 1;
+            return acc;
+        }, {});
+
+        const cities = Object.keys(cityCount);
+        const counts = Object.values(cityCount);
+        setCityData({ cities, counts });
     }
 
     return (
@@ -58,6 +74,7 @@ export default function Home() {
             </View>
             <View>
                 <ProgressChart assignedRecords={totalAssigned} totalUserLocal={totalRecords} />
+                <BarHorizontalChart data={cityData} />
             </View>
         </View>
     )

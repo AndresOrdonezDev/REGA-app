@@ -6,11 +6,17 @@ export default {
     getAllPersons(){
         return api.get('/persons')
     },
+    getPerson(id){
+        return api.get(`/persons/${id}`)
+    },
     createPerson(data){
         return api.post('/persons', data)
     },
     updatePerson(id, data){
         return api.put(`/persons/${id}`, data)
+    },
+    deletePerson(id){
+        return api.delete(`/persons/${id}`)
     },
 
     //request login
