@@ -1,7 +1,9 @@
+
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useToast } from "react-native-toast-notifications";
 import ApiService from "../services/ApiService";
+import NetInfo from "@react-native-community/netinfo";
 
 const AUTH_LOCAL_KEY = "@Auth-user"; // Clave para almacenar datos de autenticación
 
@@ -9,6 +11,11 @@ export default function UseAuthStorage() {
   const toast = useToast();
   const [authenticatedUser, setAuthenticatedUser] = useState(null); // Usuario autenticado
   const [isLoading, setIsLoading] = useState(false); // Estado de carga
+
+  const handleSync = useCallback(async () => {
+    const { isConnected } = await NetInfo.fetch();
+    return isConnected;
+}, []);
 
   // Iniciar sesión
   const handleLogin = async (cellphone, password) => {
@@ -68,10 +75,19 @@ export default function UseAuthStorage() {
     }
   };
 
+  //delete auth backend
+  const handleDeleteAuth = async()=>{
+      if(await handleSync()){
+        return await ApiService.resetAuth()
+      }
+      return 
+  }
+
   return {
     handleLogin, // Para iniciar sesión
     handleGetAuthenticatedUser, // Para obtener usuario autenticado
     handleLogout, // Para cerrar sesión
+    handleDeleteAuth,
     authenticatedUser, // Usuario actualmente autenticado
     isLoading, // Estado de carga
   };

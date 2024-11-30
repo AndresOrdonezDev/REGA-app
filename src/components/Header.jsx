@@ -5,11 +5,13 @@ import { Button, Icon } from "@rneui/themed";
 import { UserContext } from "../context/UserContext";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import UsePersonsStorage from "../hooks/UsePersonsStorage";
+import UseAuthStorage from "../hooks/UseAuthStorage";
 import { exportToExcel } from "../helpers/ExportToExcel";
 import { useToast } from "react-native-toast-notifications";
 
 export default function Header({ totalPersons }) {
   const { handleGetPersons, handleGetPersonsAdmin } = UsePersonsStorage()
+  const { handleDeleteAuth } = UseAuthStorage()
   const { navigate } = useNavigation();
   const { name } = useRoute();
   const { user, setUser } = useContext(UserContext);
@@ -47,6 +49,7 @@ export default function Header({ totalPersons }) {
     try {
       await AsyncStorage.removeItem("@Auth-user"); // Eliminar usuario autenticado
       setUser(null); // Limpiar usuario en el contexto
+      await handleDeleteAuth()
       navigate("Login"); // Redirigir a la pantalla de inicio de sesión
     } catch (error) {
       console.error("Error al cerrar sesión:", error);
@@ -68,21 +71,21 @@ export default function Header({ totalPersons }) {
 
   const handleExportData = async () => {
     try {
-      
-      if(user.user.role_name === 'Registrador'){
+
+      if (user.user.role_name === 'Registrador') {
         const persons = await handleGetPersons()
         persons.length && await exportToExcel(persons, "PersonsData.xlsx");
         return toast.show('Archivo exportado correctamente 👌', { type: 'success', style: { backgroundColor: "#00bfa5" } })
-      }else{
+      } else {
         const persons = await handleGetPersonsAdmin()
         persons.length && await exportToExcel(persons, "PersonsData.xlsx");
         return toast.show('Archivo exportado correctamente 👌', { type: 'success', style: { backgroundColor: "#00bfa5" } })
       }
-      
-      
+
+
     } catch (error) {
       toast.show("No se pudo exportar el archivo 😨", { type: "danger" });
-      
+
       console.error("Error al exportar los datos:", error);
     }
   };
@@ -115,8 +118,7 @@ export default function Header({ totalPersons }) {
       </View>
 
       <View style={styles.rightContainer}>
-
-        <TouchableOpacity
+        {user?.user?.role_name === 'Registrador' && <TouchableOpacity
           style={styles.syncButton}
           activeOpacity={0.7}
           onPress={() => handlePendingRecords()}
@@ -127,7 +129,9 @@ export default function Header({ totalPersons }) {
               <Text style={styles.badgeText}>{totalPending}</Text>
             </View>
           )}
-        </TouchableOpacity>
+        </TouchableOpacity>}
+
+
         <TouchableOpacity onPress={toggleMenu}>
           <Image
             style={styles.image}
@@ -144,7 +148,7 @@ export default function Header({ totalPersons }) {
               <Button
                 color='transparent'
                 icon={<Icon name="supervisor-account" color="#fff" />}
-
+                onPress={navigateToAdminUsers}
               />
             </TouchableOpacity>}
 
@@ -152,16 +156,17 @@ export default function Header({ totalPersons }) {
               <Text style={styles.menuText}>Exportar</Text>
               <Button
                 color="transparent"
-                icon={<Icon name="arrow-down-circle-outline" color="#fff" type="ionicon" />} // Ícono de Excel
+                icon={<Icon name="cloud-download-outline" color="#fff" type="ionicon" />}
+                onPress={handleExportData}
               />
             </TouchableOpacity>
 
             <TouchableOpacity onPress={handleLogout} style={styles.menuLogout}>
-              <Text style={styles.menuText}>salir</Text>
+              <Text style={styles.menuText}>Salir</Text>
               <Button
                 color='transparent'
-
                 icon={<Icon name="logout" color="#fff" />}
+                onPress={handleLogout}
               />
             </TouchableOpacity>
           </View>

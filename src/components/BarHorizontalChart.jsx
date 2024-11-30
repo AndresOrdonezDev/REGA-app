@@ -85,13 +85,10 @@ const styles = StyleSheet.create({
     container: {
         marginTop: 10,
         alignItems: "center",
-        paddingHorizontal: 20,
         backgroundColor: "#fff",
         borderRadius: 10,
         paddingVertical: 15,
-        elevation: 1,
-        maxHeight: 250,
-        
+        maxHeight: 260,
     },
     scrollContainer: {
         flexGrow: 1,

@@ -38,20 +38,20 @@ export default function ProgressChart({ assignedRecords, totalUserLocal }) {
 const styles = StyleSheet.create({
     chartContainer: {
         alignItems: 'center',
-        marginTop: 20,
-        marginBottom: 30
+        marginTop: 15,
+        marginBottom: 20
     },
     chartInfo: {
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 10
+        marginBottom: 5
     },
     chartInfoTitle: {
         textAlign: 'center',
         color: '#333',
         fontWeight: 'bold',
         fontSize: 18,
-        marginBottom:15
+        marginBottom:5
     },
     chartInfoText: {
         textAlign: 'center',

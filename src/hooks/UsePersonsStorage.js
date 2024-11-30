@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { useToast } from "react-native-toast-notifications";
 import NetInfo from "@react-native-community/netinfo";
 import ApiService from "../services/ApiService";
@@ -54,17 +54,18 @@ export default function UsePersonsStorage() {
 
     const handleGetPersonsAdmin = async () => {
         try {
-            if (handleSync()) {
-                const { data } = await ApiService.getAllPersons()
 
-                await AsyncStorage.setItem(USER_LOCAL_ADMIN_KEY, JSON.stringify(data));
+            if(await handleSync()){
+                handleGetPersonsAdminsServer()
             }
+
             const usersLocal = await AsyncStorage.getItem(USER_LOCAL_ADMIN_KEY);
             if (usersLocal) {
                 const usersParsed = JSON.parse(usersLocal);
                 persons = usersParsed
                 return usersParsed;
             }
+
             setTotalPersonLocal(persons)
             return [];
         } catch (error) {
@@ -72,6 +73,16 @@ export default function UsePersonsStorage() {
             return [];
         }
     };
+
+    const handleGetPersonsAdminsServer = async () => {
+        try {
+            const { data } = await ApiService.getAllPersons()
+            await AsyncStorage.setItem(USER_LOCAL_ADMIN_KEY, JSON.stringify(data));
+        } catch (error) {
+            console.error("Error al obtener los registros:", error);
+            return
+        }
+    }
 
     const handleUpdatePerson = async (person, prevSynced) => {
         try {
@@ -95,11 +106,11 @@ export default function UsePersonsStorage() {
     }
 
     const handleDeleteUser = async (idLocal, userRol) => {
-        
-        if(userRol === 'Administrador'){
+
+        if (userRol === 'Administrador') {
             await deletePersonAdmin(idLocal)
             await handleGetPersonsAdmin()
-        }else{
+        } else {
             await deletePersonRegister(idLocal)
             await handleGetPerson()
         }

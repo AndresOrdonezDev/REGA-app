@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Rega",
-    "slug": "rega",
+    "slug": "users",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/logos/rega.png",

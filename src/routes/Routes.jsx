@@ -7,6 +7,7 @@ const Stack = createNativeStackNavigator();
 
 import Login from "../views/Login";
 import Register from "../views/Register"; // Importar la pantalla de registro
+import ResetPassword from "../views/ResetPassword";
 import Home from "../views/Home";
 import AddUser from "../views/AddUser";
 import AdminUsers from "../views/AdminUsers";
@@ -41,6 +42,7 @@ export default function Routes() {
       <Stack.Navigator initialRouteName={isAuthenticated ? "Home" : "Login"}>
         <Stack.Screen name="Login" component={Login} options={{ headerShown: false }} />
         <Stack.Screen name="Register" component={Register} options={{ headerShown: false }} />
+        <Stack.Screen name="ResetPassword" component={ResetPassword} options={{ headerShown: false }} />
         <Stack.Screen name="Home" component={Home} options={{ headerShown: false }} />
         <Stack.Screen name="usersList" component={AddUser} options={{ headerShown: false }} />
         <Stack.Screen name="Panel" component={AdminUsers} options={{ headerShown: false }} />

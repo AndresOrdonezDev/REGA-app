@@ -12,6 +12,7 @@ export default function Login() {
 
   const [cellphone, setCellphone] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     // Intentar recuperar el usuario autenticado al montar la vista
@@ -35,6 +36,9 @@ export default function Login() {
     }
   };
 
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
   return (
     <View style={styles.container}>
       <View style={[styles.loginContainer, { alignItems: 'center' }]}>
@@ -58,12 +62,21 @@ export default function Login() {
 
         <Input
           placeholder="Contraseña"
-          secureTextEntry
+          secureTextEntry={!showPassword}
           leftIcon={<Icon name="lock-outline" color="#00bfa5" />}
+          rightIcon={
+            <Icon
+              name={showPassword ? "eye-off" : "eye"}
+              type="material-community"
+              color="#00bfa5"
+              onPress={togglePasswordVisibility}
+            />
+          }
           value={password}
           onChangeText={(text) => setPassword(text)}
           containerStyle={styles.input}
         />
+
 
         <Button
           title={isLoading ? "Cargando..." : "Iniciar Sesión"}
@@ -74,6 +87,7 @@ export default function Login() {
         />
 
         <Text onPress={() => navigate("Register")} style={styles.textRegister} >Registrarme en <Text style={{ color: '#00bfa5' }}>REGA</Text></Text>
+        <Text onPress={() => navigate("ResetPassword")} style={styles.textRegister} >Recuperar <Text style={{ color: '#00bfa5' }}>contraseña</Text></Text>
       </View>
     </View>
   );
@@ -92,7 +106,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 20,
     color: "#333",
-    opacity:.82
+    opacity: .82
 
   },
   form: {

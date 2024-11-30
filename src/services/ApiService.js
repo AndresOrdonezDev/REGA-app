@@ -26,6 +26,15 @@ export default {
     registerUser(user){
         return api.post('/users', user)
     },
+    requestResetPassword(data){
+        return api.post("/auth/request-reset-password", data)
+    },
+    resetPassword(data){
+        return api.post("/auth/reset-password", data)
+    },
+    resetAuth(){
+        return api.post('/auth/logout')
+    },
 
     //request users
     getAllUsers(){
