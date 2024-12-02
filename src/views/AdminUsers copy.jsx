@@ -8,18 +8,17 @@ import UseRolesStorage from "../hooks/UseRolesStorage";
 import ApiService from "../services/ApiService";
 import { useToast } from "react-native-toast-notifications";
 
-import SetRangeUserModal from "../components/SetRangeUserModal";
 
 export default function AdminUsers() {
   const { handleFetchUsersFromApi, handleGetLocalUsers } = UseUsersStorage();
   const { handleFetchRolesFromApi, handleGetLocalRoles } = UseRolesStorage();
-  const [showModal, setShowModal] = useState(true)
   const [usersLocal, setUsersLocal] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
-  const [roles, setRoles] = useState(null);
+  const [roles, setRoles] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedRole, setSelectedRole] = useState("");
+  const [rangeValue, setRangeValue] = useState("");
 
-  
   const toast = useToast();
 
   useEffect(() => {
@@ -60,7 +59,7 @@ export default function AdminUsers() {
     } catch (error) {
       toast.show(`Error obteniendo los roles: ${error}`, { type: "danger" });
     }
-  };
+  };  
 
   const handleSearch = (text) => {
     if (text === "") {
@@ -74,16 +73,60 @@ export default function AdminUsers() {
     }
   };
 
-  const handleModalClose = async () => {
-    //obtener todos los usuarios
-    setSelectedUser(null)
-    setShowModal(false)
-  }
+  const handleSave = async () => {
+    if (!selectedUser || !selectedRole) {
+      toast.show("Debe seleccionar un usuario y un rol.", { type: "danger" });
+      return;
+    }
   
-  const handleSelectUser = (user)=>{
-    setSelectedUser(user)
-    setShowModal(true)
-  }
+    const updatedUser = {
+      ...selectedUser,
+      role_id: selectedRole,
+    };
+  
+    if (rangeValue) {
+      updatedUser.range = rangeValue;
+    }
+  
+    try {
+      // Llamar al API con el usuario actualizado
+      const response = await ApiService.updateUser(updatedUser.id, updatedUser);
+  
+      if (response.status === 200) {
+        toast.show("Usuario actualizado exitosamente.", { type: "success", style: { backgroundColor: "#00bfa5" }  });
+        // Refrescar la lista de usuarios
+        fetchUsersFromApi();
+  
+        // Limpiar inputs después de guardar
+        setSelectedRole(null);
+        setRangeValue(""); // Limpiar el rango
+      } else {
+        toast.show("Error al actualizar el usuario.", { type: "danger" });
+      }
+    } catch (error) {
+      toast.show("Error al actualizar el usuario. Verifique que todos los campos requeridos estén completos.", { type: "danger" });
+    }
+  }; 
+  
+  const handleToggleUserState = async (user) => {
+    const updatedUser = {
+      ...user,
+      state: user.state === "1" ? "0" : "1", // Cambiar estado
+    };
+  
+    try {
+      const response = await ApiService.updateUser(updatedUser.id, updatedUser);
+  
+      if (response.status === 200) {
+        toast.show("Estado del usuario actualizado exitosamente.", { type: "success", style: { backgroundColor: "#00bfa5" }  });
+        fetchUsersFromApi(); // Refrescar la lista de usuarios
+      } else {
+        toast.show("Error al actualizar el estado del usuario.", { type: "danger" });
+      }
+    } catch (error) {
+      toast.show("Error al actualizar el estado del usuario.", { type: "danger" });
+    }
+  };  
 
   return (
     <View style={styles.container}>
@@ -102,7 +145,7 @@ export default function AdminUsers() {
             color="#00bfa5"
           />
         </View>
-
+       
       </View>
 
       <View style={styles.searchContainer}>
@@ -115,29 +158,92 @@ export default function AdminUsers() {
       </View>
 
       <Text style={styles.userListTitle}>Usuarios Registrados: {usersLocal.length}</Text>
-      <ScrollView style={{ marginBottom: 15, paddingHorizontal:10 }}>
+      <ScrollView style={{ marginBottom: 15 }}>
         {filteredUsers.map((user, index) => (
-          <View style={styles.userListItems} key={index}>
-            <View style={{ flex: 2, flexDirection: 'row', alignItems: "center", }}>
-              <View style={{ width: 20, height: 20, backgroundColor: '#fff', marginRight: 10, borderRadius: 50 }}>
-                <Text style={{ textAlign: 'center' }}>{index + 1}</Text>
-              </View>
-              <View>
-                <Text style={styles.userItemText}>{user.name} {user.last_name}</Text>
-                <Text style={styles.userItemText}>{user.cellphone}</Text>
-
-              </View>
+            <View
+            key={index}
+            style={[styles.userItem, selectedUser?.id === user.id ? styles.selectedUser : null]}
+            onTouchEnd={() => setSelectedUser(user)}
+            >
+            <View style={styles.userInfo}>
+                <Text style={styles.userName}>{`${user.name} ${user.last_name}`}</Text>
+                <Text style={styles.userPhone}>{user.cellphone}</Text>
+                <Text style={styles.userPhone}>
+                {"Cant. boletas: " + (user.range ? user.range : "0")}
+                </Text>
             </View>
-            <Button onPress={()=> handleSelectUser(user)} icon={<Icon name="keyboard-arrow-right" />} radius='lg' color='#fff' />
-          </View>
+            <View style={styles.userToggle}>
+                <Text style={styles.userState}>
+                {user.state === "1" ? "Activo" : "Inactivo"}
+                </Text>
+                <Switch
+                    value={user.state === "1"}
+                    onValueChange={() => handleToggleUserState(user)}
+                    thumbColor={user.state === "1" ? "#00bfa5" : "#f4f3f4"} // Color del círculo
+                    trackColor={{ false: "#d3d3d3", true: "#a3f3e1" }} // Color del fondo del toggle
+                />
+            </View>
+            </View>
         ))}
 
         {!filteredUsers.length && (
-          <Text style={styles.textNoResults}>No hay resultados de búsqueda</Text>
+            <Text style={styles.textNoResults}>No hay resultados de búsqueda</Text>
         )}
       </ScrollView>
 
-      {roles && selectedUser && <SetRangeUserModal visible={ showModal } onClose={handleModalClose} roles={roles} selectedUser={selectedUser}/>}
+      {selectedUser && (
+        <View style={styles.roleContainer}>
+            <TouchableOpacity
+            style={styles.closeIcon}
+            onPress={() => {
+                setSelectedUser(null); // Limpiar usuario seleccionado
+                setSelectedRole(""); // Limpiar rol seleccionado
+                setRangeValue(""); // Limpiar rango
+            }}
+            >
+            <Icon name="close" size={20} color="#d9534f" />
+            </TouchableOpacity>
+            <Text style={styles.roleTitle}>
+            Actualizar Rol para: {selectedUser.name} {selectedUser.last_name}
+            </Text>
+
+            <Picker
+            selectedValue={selectedRole}
+            onValueChange={(value) => {
+                setSelectedRole(value);
+                if (value !== "2") setRangeValue(""); // Limpiar rango si no es rol 2
+            }}
+            style={styles.picker}
+            >
+            <Picker.Item label="Seleccione un rol" value="" />
+            {roles.map((role) => (
+                <Picker.Item key={role.id} label={role.name_role} value={role.id.toString()} />
+            ))}
+            </Picker>
+
+            {selectedRole === "2" && (
+            <>
+                <Text>Cantidad de boletas</Text>
+                <Input
+                placeholder="Ingrese el rango"
+                keyboardType="numeric"
+                value={rangeValue}
+                onChangeText={(text) => setRangeValue(text)}
+                containerStyle={styles.input}
+                />
+            </>
+            )}
+
+            <View style={styles.buttonContainer}>
+            <Button
+                title="Guardar"
+                onPress={handleSave}
+                buttonStyle={styles.saveButton}
+                icon={<Icon name="save" color="#fff" />}
+            />
+            </View>
+        </View>
+        )}
     </View>
   );
 }
@@ -163,7 +269,6 @@ const styles = StyleSheet.create({
   },
   userLegend: {
     fontSize: 20,
-    paddingHorizontal:10
   },
   searchContainer: {
     flexDirection: "row",
@@ -255,18 +360,4 @@ const styles = StyleSheet.create({
     color: "#777",
     marginRight: 10,
   },
-  //styles each user
-  userListItems: {
-    padding: 10,
-    backgroundColor: '#b2dfdb',
-    marginVertical: 8,
-    borderRadius: 10,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center'
-  },
-  userItemText: {
-    color: '#333333',
-    fontWeight: 'bold'
-  }
 });

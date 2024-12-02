@@ -55,7 +55,7 @@ export default function UsePersonsStorage() {
     const handleGetPersonsAdmin = async () => {
         try {
 
-            if(await handleSync()){
+            if (await handleSync()) {
                 handleGetPersonsAdminsServer()
             }
 
@@ -75,11 +75,13 @@ export default function UsePersonsStorage() {
     };
 
     const handleGetPersonsAdminsServer = async () => {
+
         try {
             const { data } = await ApiService.getAllPersons()
-            await AsyncStorage.setItem(USER_LOCAL_ADMIN_KEY, JSON.stringify(data));
+            return await AsyncStorage.setItem(USER_LOCAL_ADMIN_KEY, JSON.stringify(data));
+
         } catch (error) {
-            console.error("Error al obtener los registros:", error);
+            console.error("Error al obtener los registros admin:", error);
             return
         }
     }

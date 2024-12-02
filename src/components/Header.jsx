@@ -43,8 +43,7 @@ export default function Header({ totalPersons }) {
     fetchUser();
   }, [user, setUser]);
 
-  const toggleMenu = () => setMenuVisible((prev) => !prev);
-
+  
   const handleLogout = async () => {
     try {
       await AsyncStorage.removeItem("@Auth-user"); // Eliminar usuario autenticado
@@ -69,6 +68,10 @@ export default function Header({ totalPersons }) {
     navigate("Panel"); // Redirigir al Panel de Administración
   };
 
+  const navigateToView = (view) =>{
+    navigate(view)
+  }
+
   const handleExportData = async () => {
     try {
 
@@ -89,8 +92,6 @@ export default function Header({ totalPersons }) {
       console.error("Error al exportar los datos:", error);
     }
   };
-
-
 
   return (
     <View style={styles.container}>
@@ -132,7 +133,7 @@ export default function Header({ totalPersons }) {
         </TouchableOpacity>}
 
 
-        <TouchableOpacity onPress={toggleMenu}>
+        <TouchableOpacity onPress={()=>setMenuVisible(!menuVisible)}>
           <Image
             style={styles.image}
             source={{
@@ -143,15 +144,23 @@ export default function Header({ totalPersons }) {
         {menuVisible && (
           <View style={styles.card}>
 
-            {user?.user?.role_name === 'Administrador' && <TouchableOpacity onPress={navigateToAdminUsers} style={styles.menuItem}>
-              <Text style={styles.menuText}>Admin</Text>
+            <TouchableOpacity onPress={navigateToAdminUsers} style={styles.menuItem}>
+              <Text style={styles.menuText}>Usuarios</Text>
               <Button
                 color='transparent'
                 icon={<Icon name="supervisor-account" color="#fff" />}
                 onPress={navigateToAdminUsers}
               />
-            </TouchableOpacity>}
+            </TouchableOpacity>
 
+            <TouchableOpacity onPress={()=>navigateToView('adminRageCities')} style={styles.menuLogout}>
+              <Text style={styles.menuText}>Municipios</Text>
+              <Button
+                color="transparent"
+                icon={<Icon name="cloud-download-outline" color="#fff" type="ionicon" />}
+                onPress={()=>navigateToView('adminRageCities')}
+              />
+            </TouchableOpacity>
             <TouchableOpacity onPress={handleExportData} style={styles.menuLogout}>
               <Text style={styles.menuText}>Exportar</Text>
               <Button

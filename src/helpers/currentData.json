@@ -1,0 +1,72 @@
+[
+    {
+        "city_name": "MOCOA",
+        "last": 1,
+        "range_end": 5000,
+        "range_init": 1,
+        "is_active": "1"
+    },
+    {
+        "city_name": "PUERTO ASIS",
+        "last": 5001,
+        "range_end": 15000,
+        "range_init": 5001,
+        "is_active": "1"
+    },
+    {
+        "city_name": "SIBUNDOY",
+        "last": 15001,
+        "range_end": 25000,
+        "range_init": 15001,
+        "is_active": "1"
+    },
+    {
+        "city_name": "COLON",
+        "last": 25001,
+        "range_end": 35000,
+        "range_init": 25001,
+        "is_active": "1"
+    },
+    {
+        "city_name": "SAN MIGUEL",
+        "last": 35001,
+        "range_end": 45000,
+        "range_init": 35001,
+        "is_active": "1"
+    },
+    {
+        "city_name": "VILLAGARZON",
+        "last": 45001,
+        "range_end": 50000,
+        "range_init": 45001,
+        "is_active": "1"
+    },
+    {
+        "city_name": "PUERTO GUZMAN",
+        "last": 50001,
+        "range_end": 50500,
+        "range_init": 50001,
+        "is_active": "1"
+    },
+    {
+        "city_name": "SAN FRANCISCO",
+        "last": 50501,
+        "range_end": 50600,
+        "range_init": 50501,
+        "is_active": "1"
+    },
+    {
+        "city_name": "ORITO",
+        "last": 50601,
+        "range_end": 50700,
+        "range_init": 50601,
+        "is_active": "1"
+    },
+    {
+        "city_name": "LEGUIZAMO",
+        "last": 50701,
+        "range_end": 50800,
+        "range_init": 50701,
+        "is_active": "1"
+    }
+]

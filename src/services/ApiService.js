@@ -50,8 +50,20 @@ export default {
     //request process admin
     sendWhatsApps(data) {
         return api.post("/persons/send-whatsapp", data);
-    } 
+    },
 
+    //ranges by cities
+    getAllRangeCity(){
+        return api.get('/ranges')
+    },
+    createNewRangeCity(data){
+        return api.post('/ranges/',data)
+    },
+    updateRageCity(id,data){
+        console.log('data apiService', id, data)
+        return api.put(`/ranges/${id}`,data)
+    },
+   
     
 
 }

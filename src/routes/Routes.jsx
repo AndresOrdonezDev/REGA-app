@@ -12,7 +12,7 @@ import Home from "../views/Home";
 import AddUser from "../views/AddUser";
 import AdminUsers from "../views/AdminUsers";
 import PendingRecords from "../views/PendingRecords";
-
+import AdminRangeCities from "../views/AdminRangeCities";
 
 export default function Routes() {
   const { handleGetAuthenticatedUser } = UseAuthStorage();
@@ -47,6 +47,7 @@ export default function Routes() {
         <Stack.Screen name="usersList" component={AddUser} options={{ headerShown: false }} />
         <Stack.Screen name="Panel" component={AdminUsers} options={{ headerShown: false }} />
         <Stack.Screen name="pendingRecords" component={PendingRecords} options={{ headerShown: false }} />
+        <Stack.Screen name="adminRageCities" component={AdminRangeCities} options={{ headerShown: false }} />
       </Stack.Navigator>
     </NavigationContainer>
   );
