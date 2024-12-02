@@ -1,25 +1,32 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, ScrollView, Switch, TouchableOpacity } from "react-native";
+import React, { useState, useEffect, useContext } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Switch,
+  TouchableOpacity,
+} from "react-native";
 import Header from "../components/Header";
-import { Picker } from '@react-native-picker/picker';
 import { Button, Icon, Input } from "@rneui/themed";
 import UseUsersStorage from "../hooks/UseUsersStorage";
 import UseRolesStorage from "../hooks/UseRolesStorage";
-import ApiService from "../services/ApiService";
 import { useToast } from "react-native-toast-notifications";
+//my functions
+import { UserContext } from "../context/UserContext";
 
 import SetRangeUserModal from "../components/SetRangeUserModal";
 
 export default function AdminUsers() {
+  const { user } = useContext(UserContext);
   const { handleFetchUsersFromApi, handleGetLocalUsers } = UseUsersStorage();
   const { handleFetchRolesFromApi, handleGetLocalRoles } = UseRolesStorage();
-  const [showModal, setShowModal] = useState(true)
+  const [showModal, setShowModal] = useState(true);
   const [usersLocal, setUsersLocal] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [roles, setRoles] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
 
-  
   const toast = useToast();
 
   useEffect(() => {
@@ -34,7 +41,9 @@ export default function AdminUsers() {
       setUsersLocal(localUsers);
       setFilteredUsers(localUsers);
     } catch (error) {
-      toast.show(`Error cargando usuarios locales: ${error}`, { type: "danger" });
+      toast.show(`Error cargando usuarios locales: ${error}`, {
+        type: "danger",
+      });
     }
   };
 
@@ -66,9 +75,12 @@ export default function AdminUsers() {
     if (text === "") {
       setFilteredUsers(usersLocal);
     } else {
-      const filtered = usersLocal.filter((user) =>
-        `${user.name} ${user.last_name}`.toLowerCase().includes(text.toLowerCase()) ||
-        user.cellphone.toLowerCase().includes(text.toLowerCase())
+      const filtered = usersLocal.filter(
+        (user) =>
+          `${user.name} ${user.last_name}`
+            .toLowerCase()
+            .includes(text.toLowerCase()) ||
+          user.cellphone.toLowerCase().includes(text.toLowerCase())
       );
       setFilteredUsers(filtered);
     }
@@ -76,14 +88,14 @@ export default function AdminUsers() {
 
   const handleModalClose = async () => {
     //obtener todos los usuarios
-    setSelectedUser(null)
-    setShowModal(false)
-  }
-  
-  const handleSelectUser = (user)=>{
-    setSelectedUser(user)
-    setShowModal(true)
-  }
+    setSelectedUser(null);
+    setShowModal(false);
+  };
+
+  const handleSelectUser = (user) => {
+    setSelectedUser(user);
+    setShowModal(true);
+  };
 
   return (
     <View style={styles.container}>
@@ -91,53 +103,96 @@ export default function AdminUsers() {
 
       <View style={styles.usersContainer}>
         <View style={styles.leftContainer}>
-          <Text style={styles.userLegend}>Listado de usuarios</Text>
+          <Text style={styles.userLegend}>Asignar Rangos</Text>
         </View>
         <View style={styles.rightContainer}>
           <Button
             onPress={fetchUsersFromApi}
-            title="Actualizar"
-            icon={<Icon name="refresh" color="#fff" />}
+            title=" Ver asignados"
+            icon={<Icon name="eye-outline" color="#fff" type="ionicon" />}
             radius="lg"
             color="#00bfa5"
           />
         </View>
-
       </View>
 
       <View style={styles.searchContainer}>
         <View style={{ flex: 5 }}>
-          <Input onChangeText={(text) => handleSearch(text)} placeholder="Buscar por nombre o teléfono" />
+          <Input
+            onChangeText={(text) => handleSearch(text)}
+            placeholder="Buscar por nombre o teléfono"
+          />
         </View>
         <View style={{ flex: 0.5 }}>
           <Icon name="search" color="#00986c" />
         </View>
       </View>
 
-      <Text style={styles.userListTitle}>Usuarios Registrados: {usersLocal.length}</Text>
-      <ScrollView style={{ marginBottom: 15, paddingHorizontal:10 }}>
-        {filteredUsers.map((user, index) => (
-          <View style={styles.userListItems} key={index}>
-            <View style={{ flex: 2, flexDirection: 'row', alignItems: "center", }}>
-              <View style={{ width: 20, height: 20, backgroundColor: '#fff', marginRight: 10, borderRadius: 50 }}>
-                <Text style={{ textAlign: 'center' }}>{index + 1}</Text>
-              </View>
-              <View>
-                <Text style={styles.userItemText}>{user.name} {user.last_name}</Text>
-                <Text style={styles.userItemText}>{user.cellphone}</Text>
+      <Text style={styles.userListTitle}>
+        Usuarios Registrados: {usersLocal.length} 
+      </Text>
+      <ScrollView style={{ marginBottom: 15, paddingHorizontal: 10 }}>
+        {filteredUsers.map((userList, index) => (
+          <View key={userList.id}>
+            {userList.name !== user.user.name && (
+              <View style={styles.userListItems} key={index}>
+                <View
+                  style={{
+                    flex: 2,
+                    flexDirection: "row",
+                    alignItems: "center",
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 20,
+                      height: 20,
+                      backgroundColor: "#fff",
+                      marginRight: 10,
+                      borderRadius: 50,
+                    }}
+                  >
+                    <Text style={{ textAlign: "center" }}>{index + 1}</Text>
+                  </View>
+                  <View>
+                    <Text style={styles.userItemText}>
+                      {userList.name} {userList.last_name}
+                    </Text>
+                    <Text style={styles.userItemText}>
+                      {userList.cellphone}
+                    </Text>
+                  </View>
+                </View>
 
+                {user.role_name === "Administrador" &&
+                  user.role_name === "Registrador" && (
+                    <Button
+                      onPress={() => handleSelectUser(userList)}
+                      icon={<Icon name="keyboard-arrow-right" />}
+                      radius="lg"
+                      color="#fff"
+                    />
+                  )}
               </View>
-            </View>
-            <Button onPress={()=> handleSelectUser(user)} icon={<Icon name="keyboard-arrow-right" />} radius='lg' color='#fff' />
+            )}
           </View>
         ))}
 
         {!filteredUsers.length && (
-          <Text style={styles.textNoResults}>No hay resultados de búsqueda</Text>
+          <Text style={styles.textNoResults}>
+            No hay resultados de búsqueda
+          </Text>
         )}
       </ScrollView>
 
-      {roles && selectedUser && <SetRangeUserModal visible={ showModal } onClose={handleModalClose} roles={roles} selectedUser={selectedUser}/>}
+      {roles && selectedUser && (
+        <SetRangeUserModal
+          visible={showModal}
+          onClose={handleModalClose}
+          roles={roles}
+          selectedUser={selectedUser}
+        />
+      )}
     </View>
   );
 }
@@ -163,7 +218,7 @@ const styles = StyleSheet.create({
   },
   userLegend: {
     fontSize: 20,
-    paddingHorizontal:10
+    paddingHorizontal: 10,
   },
   searchContainer: {
     flexDirection: "row",
@@ -248,7 +303,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    color: "#00bfa5"
+    color: "#00bfa5",
   },
   userState: {
     fontSize: 14,
@@ -258,15 +313,15 @@ const styles = StyleSheet.create({
   //styles each user
   userListItems: {
     padding: 10,
-    backgroundColor: '#b2dfdb',
+    backgroundColor: "#b2dfdb",
     marginVertical: 8,
     borderRadius: 10,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center'
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
   },
   userItemText: {
-    color: '#333333',
-    fontWeight: 'bold'
-  }
+    color: "#333333",
+    fontWeight: "bold",
+  },
 });
