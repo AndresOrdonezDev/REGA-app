@@ -18,7 +18,7 @@ import { UserContext } from "../context/UserContext";
 import SetRangeUserModal from "../components/SetRangeUserModal";
 
 export default function AdminUsers() {
-  const { user } = useContext(UserContext);
+  const { user, getAllRangeCities,getAllRangeByUser,  } = useContext(UserContext);
   const { handleFetchUsersFromApi, handleGetLocalUsers } = UseUsersStorage();
   const { handleFetchRolesFromApi, handleGetLocalRoles } = UseRolesStorage();
   const [showModal, setShowModal] = useState(true);
@@ -33,6 +33,8 @@ export default function AdminUsers() {
     loadLocalUsers();
     fetchUsersFromApi();
     fetchRoles();
+    getAllRangeCities()
+    getAllRangeByUser()
   }, []);
 
   const loadLocalUsers = async () => {
@@ -90,6 +92,7 @@ export default function AdminUsers() {
     //obtener todos los usuarios
     setSelectedUser(null);
     setShowModal(false);
+    await getAllRangeCities()
   };
 
   const handleSelectUser = (user) => {
@@ -129,54 +132,60 @@ export default function AdminUsers() {
       </View>
 
       <Text style={styles.userListTitle}>
-        Usuarios Registrados: {usersLocal.length} 
+        Usuarios Registrados: {usersLocal.length}
       </Text>
       <ScrollView style={{ marginBottom: 15, paddingHorizontal: 10 }}>
-        {filteredUsers.map((userList, index) => (
-          <View key={userList.id}>
-            {userList.name !== user.user.name && (
-              <View style={styles.userListItems} key={index}>
+        {filteredUsers
+          .filter((userList) => {
+            if (user?.user.role_name !== "Administrador" && userList.role_name === "Administrador") {
+              return false;
+            }
+            return userList.role_name !== user?.user.role_name;
+          })
+          .map((userList, index) => (
+            <View style={styles.userListItems} key={index}>
+              <View
+                style={{
+                  flex: 2,
+                  flexDirection: "row",
+                  alignItems: "center",
+                }}
+              >
                 <View
                   style={{
-                    flex: 2,
-                    flexDirection: "row",
-                    alignItems: "center",
+                    width: 20,
+                    height: 20,
+                    backgroundColor: "#fff",
+                    marginRight: 10,
+                    borderRadius: 50,
                   }}
                 >
-                  <View
-                    style={{
-                      width: 20,
-                      height: 20,
-                      backgroundColor: "#fff",
-                      marginRight: 10,
-                      borderRadius: 50,
-                    }}
-                  >
-                    <Text style={{ textAlign: "center" }}>{index + 1}</Text>
-                  </View>
-                  <View>
-                    <Text style={styles.userItemText}>
-                      {userList.name} {userList.last_name}
-                    </Text>
-                    <Text style={styles.userItemText}>
-                      {userList.cellphone}
-                    </Text>
-                  </View>
+                  <Text style={{ textAlign: "center" }}>{index + 1}</Text>
                 </View>
-
-                {user.role_name === "Administrador" &&
-                  user.role_name === "Registrador" && (
-                    <Button
-                      onPress={() => handleSelectUser(userList)}
-                      icon={<Icon name="keyboard-arrow-right" />}
-                      radius="lg"
-                      color="#fff"
-                    />
-                  )}
+                <View>
+                  <Text style={styles.userItemText}>
+                    {userList.name} {userList.last_name}
+                  </Text>
+                  <Text style={styles.userItemText}>
+                    {userList.cellphone}
+                  </Text>
+                  <Text style={styles.userItemText}>
+                    {userList.role_name ? userList.role_name : 'Sin asignar'}
+                  </Text>
+                </View>
               </View>
-            )}
-          </View>
-        ))}
+
+              {(user?.user.role_name === "Administrador" ||
+                user?.user.role_name === "Coordinador") && (
+                  <Button
+                    onPress={() => handleSelectUser(userList)}
+                    icon={<Icon name="keyboard-arrow-right" />}
+                    radius="lg"
+                    color="#fff"
+                  />
+                )}
+            </View>
+          ))}
 
         {!filteredUsers.length && (
           <Text style={styles.textNoResults}>

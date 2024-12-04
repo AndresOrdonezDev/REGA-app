@@ -10,15 +10,17 @@ import {
 } from "react-native";
 import { Button, Icon, Input, ListItem } from "@rneui/themed";
 //my functions
-import { UserContext } from "../context/UserContext";
+import { UserContext, user } from "../context/UserContext";
+import UseRangeUser from "../hooks/UseRangeUser";
 
 export default function SetRangeUserModal({
   onClose,
   visible,
   roles,
   selectedUser,
-}) {
-  const { rangeCitiesMain, user } = useContext(UserContext);
+}){
+  const { saveRangeUser } = UseRangeUser()
+  const { rangeCitiesMain, user, rangeByUser, getAllRangeByUser } = useContext(UserContext);
 
   const [expandedRol, setExpandedRol] = useState(false);
   const [expandedRange, setExpandedRange] = useState(false);
@@ -29,34 +31,39 @@ export default function SetRangeUserModal({
   const [isLoading, setIsLoading] = useState(false);
   const [messageAlert, setMessageAlert] = useState("");
 
-  const [userRangeData, setUserRangeData] = useState({
-    name: "",
-    range_end: 0,
-  });
-
-  const handleChange = (name, text) => {
-    setUserRangeData({
-      ...userRangeData,
-      [name]: name === "name" ? text : Number(text),
-    });
-  };
+  const [rangeEndForm, setRangeEndForm] = useState(null);
 
   const handleSubmitRangeUser = async () => {
+    console.log('rango selected ', rangeSelected)
     const errors = [
-      !rangeSelected && registrerError("Elije un arango de numeración"),
-      !rangeSelected && registrerError("Elije un arango de numeración"),
+      !rangeSelected && registerError("Elije un rango de numeración"),
+      (!selectedUser?.role_name && !rolSelected) && registerError('Elije un rol de usuario'),
+      (!rangeEndForm || +rangeEndForm <= +rangeSelected.last || +rangeEndForm > +rangeSelected.range_end) && registerError(`El rango debe estar entre ${rangeSelected.last} y ${rangeSelected.range_end}`)
     ];
 
     if (errors.some((error) => error)) {
       return;
     }
 
-    console.log("paso");
+    const data = { 
+      user_id: +selectedUser.id, 
+      range_init: +rangeSelected.last, 
+      range_end: +rangeEndForm, 
+      city_name: rangeSelected.city_name, 
+      last: +rangeSelected.last
+    }
+    
+    setIsLoading(true)
 
-    //onClose();
+    //from admin to coordinator
+    let isSendAdmin = user?.user.role_name === 'Administrador' ? true : false
+    const dataUpdate = { ...rangeSelected, last: +rangeEndForm + 1}
+    await saveRangeUser(data, dataUpdate, isSendAdmin)
+    setIsLoading(false)
+    onClose();
   };
 
-  const registrerError = (message) => {
+  const registerError = (message) => {
     setMessageAlert(message);
     setTimeout(() => {
       setMessageAlert("");
@@ -65,23 +72,16 @@ export default function SetRangeUserModal({
   };
 
   useEffect(() => {
-    setUserRangeData({
-      name: "",
-      range_end: 0,
-    });
-
-    // updateValuesToNewRegister()
-    setExpandedRol(false);
-    setExpandedRange(false);
-    console.log("usuarios actual", user);
+    setRangeEndForm(null)
+    setExpandedRol(false)
+    setExpandedRange(false)
+    setRangeSelected(null)
+    setRolSelected("")
+    getAllRangeByUser()
+    //console.log('range by user ', rangeByUser)
   }, [visible]);
 
-  // const updateValuesToNewRegister = () => {
-  //     const highestRangeEnd = rangeAllUsers.reduce((max, city) =>
-  //         Math.max(max, city.range_end), 0);
 
-  //     setLast(highestRangeEnd);
-  // }
   return (
     <Modal visible={visible} transparent animationType="fade">
       <View style={styles.container}>
@@ -108,7 +108,7 @@ export default function SetRangeUserModal({
                   <ListItem.Content>
                     <ListItem.Title>Rol Usuario </ListItem.Title>
                     <ListItem.Subtitle>
-                      {rolSelected ? rolSelected : "Elige un rol"}
+                      {selectedUser?.role_name ? selectedUser?.role_name : rolSelected ? rolSelected : "Elige un rol"}
                     </ListItem.Subtitle>
                   </ListItem.Content>
                 }
@@ -117,7 +117,14 @@ export default function SetRangeUserModal({
               >
                 <ListItem>
                   <ListItem.Content>
-                    {roles?.map((rol) => (
+                    {roles?.filter(rolUser => {
+                      if (user.user.role_name === "Administrador") {
+                        return rolUser
+                      } else {
+                        return rolUser.name_role !== user.user.role_name && rolUser.name_role !== 'Administrador'
+                      }
+
+                    }).map((rol) => (
                       <ListItem.Title
                         onPress={() => [
                           setRolSelected(rol?.name_role),
@@ -151,8 +158,13 @@ export default function SetRangeUserModal({
                 onPress={() => setExpandedRange(!expandedRange)}
               >
                 <ListItem>
-                  <ListItem.Content>
-                    {rangeCitiesMain?.map((range) => (
+                  {/* range to admin */}
+                  {user?.user.role_name === 'Administrador' && <ListItem.Content>
+                    {rangeCitiesMain?.filter(range => {
+                      if (user?.user.role_name === 'Administrador') {
+                        return range.is_active === '1'
+                      }
+                    }).map((range) => (
                       <ListItem.Title
                         onPress={() => [
                           setRangeSelected(range),
@@ -162,26 +174,49 @@ export default function SetRangeUserModal({
                         key={range.id}
                       >
                         <Text style={{ fontWeight: "bold", color: "#00bfa5" }}>
-                          {range.city_name}: {range.last} - {range.range_end}
+                          {range.city_name}: {range.range_init} - {range.range_end}
                         </Text>
                       </ListItem.Title>
                     ))}
-                  </ListItem.Content>
+                  </ListItem.Content>}
+                  {/* range to coord */}
+                  {user?.user.role_name !== 'Administrador' && <ListItem.Content>
+                    {rangeByUser?.filter(range => {
+                      if (user?.user.id === range.user_id) {
+                        return range.completed === '0'
+                      }
+                    }).map((range) => (
+                      <ListItem.Title
+                        onPress={() => [
+                          setRangeSelected(range),
+                          setExpandedRange(false),
+                        ]}
+                        style={styles.nameCity}
+                        key={range.id}
+                      >
+                        <Text style={{ fontWeight: "bold", color: "#00bfa5" }}>
+                          {range.city_name}: {range.range_init} - {range.range_end}
+                        </Text>
+                      </ListItem.Title>
+                    ))}
+                  </ListItem.Content>}
+
+
                 </ListItem>
               </ListItem.Accordion>
               {rangeSelected && (
                 <View>
                   <Input
                     style={styles.noOpacityDisabled}
-                    value={String(`Rango inicial: ${rangeSelected.last}`)}
+                    value={String(`Último asignado: ${rangeSelected.last}`)}
                     disabled={true}
                     placeholder="Rango inicial"
                   />
 
                   <Input
                     keyboardType="numeric"
-                    value={userRangeData.range_end}
-                    onChangeText={(text) => handleChange("range_end", text)}
+                    value={rangeEndForm}
+                    onChangeText={(text) => setRangeEndForm(text)}
                     placeholder="Rango final"
                   />
                 </View>

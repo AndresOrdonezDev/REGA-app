@@ -7,10 +7,12 @@ export const UserContext = createContext();
 export const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [rangeCitiesMain, setRangeCitiesMain] = useState([])
+  const [rangeByUser, setRangeByUser]= useState([])
 
   useEffect(() => {
     fetchUser();
     getAllRangeCities()
+    getAllRangeByUser()
   }, []);
 
   const fetchUser = async () => {
@@ -33,15 +35,22 @@ export const UserProvider = ({ children }) => {
     const {data} = await ApiService.getAllRangeCity()
     setRangeCitiesMain(data)
   }
+  const getAllRangeByUser = async()=>{
+    const {data} = await ApiService.getAllRangeUsers()
+    setRangeByUser(data)
+  }
 
   return (
     <UserContext.Provider 
       value={{ 
-        user, 
         setUser, 
         logout, 
         fetchUser,
-        rangeCitiesMain
+        getAllRangeCities,
+        getAllRangeByUser,
+        user, 
+        rangeCitiesMain,
+        rangeByUser
       }}>
       {children}
     </UserContext.Provider>

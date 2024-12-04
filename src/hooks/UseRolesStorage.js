@@ -13,7 +13,7 @@ export default function UseRolesStorage() {
       const response = await ApiService.getAllRoles(); // Llamar al endpoint
       if (response.status === 200 && response.data) {
         const roles = response.data;
-
+        console.log('roles from api', roles)
         // Guardar roles en AsyncStorage
         await AsyncStorage.setItem(ROLES_LOCAL_KEY, JSON.stringify(roles));
 

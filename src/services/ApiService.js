@@ -60,9 +60,19 @@ export default {
         return api.post('/ranges/',data)
     },
     updateRageCity(id,data){
-        console.log('data apiService', id, data)
         return api.put(`/ranges/${id}`,data)
     },
+
+    //range by user
+    getAllRangeUsers(){
+        return api.get('/ranges-users')
+    },
+    createNewRangeUser(data){
+        return api.post('/ranges-users/',data)
+    },
+    updateRangeUser(id,data){
+        return api.put(`/ranges-users/${id}`,data)
+    }
    
     
 
