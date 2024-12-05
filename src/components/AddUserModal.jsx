@@ -4,43 +4,30 @@ import { Button, Icon, Input, ListItem } from '@rneui/themed'
 import { requestForegroundPermissionsAsync, getCurrentPositionAsync } from 'expo-location'
 //my functions
 import UsePersonsStorage from "../hooks/UsePersonsStorage";
+import UseRangeUser from "../hooks/UseRangeUser";
 import { UserContext } from "../context/UserContext";
 
-export default function AddUserModal({ onClose, visible, userEditing, totalRecords }) {
-    const { user } = useContext(UserContext);
+export default function AddUserModal({ onClose, visible, userEditing, totalRecords, rangeByUser }) {
+    const { user,getRangeUserLocal } = useContext(UserContext);
     const { handleSavePerson, handleUpdatePerson, handleDeleteUser, handleSync, handleGetPersons, handleGetPerson } = UsePersonsStorage()
+    const { updateRangesLocals } = UseRangeUser()
     const [expanded, setExpanded] = useState(false)
-    const [selectedCity, setSelectCity] = useState('')
+
+    const [selectedRage, setSelectedRage] = useState(null)
+
     const [isLoading, setIsLoading] = useState(false)
     const [isFormEmpty, setIsFormEmpty] = useState('')
     const [isPersonDeleted, setIsPersonDeleted] = useState(false)
-    const [userData, setUserData] = useState({
 
+    const [userData, setUserData] = useState({
         document_number: '',
         name: "",
         last_name: "",
         cellphone: "",
         locality: "",
         department: "PUTUMAYO",
-        city: "",
-        number_assigned: "",
     })
 
-    const municipalities = [
-        "MOCOA",
-        "COLON",
-        "ORITO",
-        "PUERTO ASIS",
-        "PUERTO CAICEDO",
-        "PUERTO GUZMAN",
-        "LEGUIZAMO",
-        "SIBUNDOY",
-        "SAN FRANCISCO",
-        "SAN MIGUEL",
-        "SANTIAGO",
-        "VALLE DEL GUAMUEZ",
-        "VILLAGARZON"
-    ];
 
     const handleChange = (name, text) => {
         setUserData({
@@ -50,10 +37,6 @@ export default function AddUserModal({ onClose, visible, userEditing, totalRecor
     }
 
     useEffect(() => {
-        handleChange('city', selectedCity)
-    }, [selectedCity])
-
-    useEffect(() => {
         setUserData({
             document_number: userEditing?.document_number || '',
             name: userEditing?.name || '',
@@ -61,20 +44,28 @@ export default function AddUserModal({ onClose, visible, userEditing, totalRecor
             cellphone: userEditing?.cellphone || '',
             locality: userEditing?.locality || '',
             department: "PUTUMAYO",
-            city: userEditing?.city || '',
-            number_assigned: userEditing?.city || '',
-
         })
-        setSelectCity(userEditing?.city || '',)
+
         logLocation()
-        
         setIsPersonDeleted(false)
         validateToDeletePerson()
+        setSelectedRage(null)
+        setExpanded(false)
+        getRangeUserLocal()
+       
     }, [visible])
 
-    
+
 
     const handleSubmitUser = async (isEdit) => {
+
+        if (!selectedRage) {
+            setIsFormEmpty('Elije un rango de numeración')
+            setTimeout(() => {
+                setIsFormEmpty('')
+            }, 3000)
+            return
+        }
 
         if (Object.values(userData).includes('')) {
             setIsFormEmpty(`Todos los campos son obligatorios`)
@@ -106,20 +97,18 @@ export default function AddUserModal({ onClose, visible, userEditing, totalRecor
                 return
             }
 
-            if (+user.user.range <= +totalRecords) {
-
-                setIsFormEmpty('Ya registraste todos los asignados')
-                setTimeout(() => {
-                    setIsFormEmpty('')
-                }, 3000)
-
-                return
-            }
+           
             setIsLoading(true)
             const ubication = await logLocation()
-            
+            const completed = +selectedRage.last === +selectedRage.range_end ? '1' : '0'
+            const last = +selectedRage.last === +selectedRage.range_end ? +selectedRage.last : +selectedRage.last+1
+
             const idLocal = generateUniqueId()
-            await handleSavePerson({ ...userData, is_synced, user_register_id, idLocal, ubication })
+            const data = { ...userData, is_synced, user_register_id, idLocal, ubication,number_assigned:+selectedRage.last, city:selectedRage.city_name   }
+            const rangeUpdate = {...selectedRage, completed, last}
+
+            await handleSavePerson(data)
+            await updateRangesLocals(rangeUpdate)
             setIsLoading(false)
             onClose()
         }
@@ -173,7 +162,7 @@ export default function AddUserModal({ onClose, visible, userEditing, totalRecor
         }
     }
 
-    async function fetchLocation(){
+    async function fetchLocation() {
         try {
             const { status } = await requestForegroundPermissionsAsync();
             if (status !== 'granted') {
@@ -181,13 +170,13 @@ export default function AddUserModal({ onClose, visible, userEditing, totalRecor
                 return;
             }
             const location = await getCurrentPositionAsync({});
-            const { latitude, longitude } =  location.coords;
+            const { latitude, longitude } = location.coords;
             return `${latitude}, ${longitude}`;
 
         } catch (error) {
             console.error('Error obteniendo ubicación:', error);
             Alert.alert('Error', 'No se pudo obtener la ubicación.');
-        } 
+        }
     };
     async function logLocation() {
         const coords = await fetchLocation();
@@ -205,16 +194,11 @@ export default function AddUserModal({ onClose, visible, userEditing, totalRecor
                     </View>
                     <ScrollView>
                         <View>
-                            <Input value={userData.name} onChangeText={(text) => handleChange('name', text)} placeholder="Nombres" />
-                            <Input value={userData.last_name} onChangeText={(text) => handleChange('last_name', text)} placeholder="Apellidos" />
-                            <Input value={userData.document_number} onChangeText={(text) => handleChange('document_number', text)} placeholder="No. Cédula" />
-                            <Input value={userData.cellphone} onChangeText={(text) => handleChange('cellphone', text)} placeholder="Celular" />
-
                             <ListItem.Accordion
                                 content={
                                     <ListItem.Content>
-                                        <ListItem.Title>Municipio</ListItem.Title>
-                                        <ListItem.Subtitle>{selectedCity ? selectedCity : 'Elige un municipio'}</ListItem.Subtitle>
+                                        <ListItem.Title>Rangos de numeración</ListItem.Title>
+                                        <ListItem.Subtitle>{selectedRage ? `${selectedRage.city_name} ${selectedRage.range_init} - ${selectedRage.range_end}` : 'Elige un rango'}</ListItem.Subtitle>
                                     </ListItem.Content>
                                 }
                                 isExpanded={expanded}
@@ -223,51 +207,65 @@ export default function AddUserModal({ onClose, visible, userEditing, totalRecor
                             >
                                 <ListItem>
                                     <ListItem.Content>
-                                        {municipalities.map(name => (
-                                            <ListItem.Title onPress={() => [setSelectCity(name), setExpanded(false)]} style={styles.nameCity} key={name}>{name}</ListItem.Title>
+                                        {rangeByUser?.filter(range => range.user_id === user?.user.id && range.completed !== '1').map(range => (
+                                            <ListItem.Title
+                                                onPress={() => [setSelectedRage(range),
+                                                setExpanded(false)]}
+                                                style={styles.nameCity} key={range.id}
+                                            >{range.city_name} {range.range_init} - {range.range_end}
+                                            </ListItem.Title>
                                         ))}
 
                                     </ListItem.Content>
                                 </ListItem>
                             </ListItem.Accordion>
+                            {selectedRage && <View>
+                                <Input value={userData.name} onChangeText={(text) => handleChange('name', text)} placeholder="Nombres" />
+                                <Input value={userData.last_name} onChangeText={(text) => handleChange('last_name', text)} placeholder="Apellidos" />
+                                <Input value={userData.document_number} onChangeText={(text) => handleChange('document_number', text)} placeholder="No. Cédula" />
+                                <Input value={userData.cellphone} onChangeText={(text) => handleChange('cellphone', text)} placeholder="Celular" />
+                                <Input value={userData.locality} onChangeText={(text) => handleChange('locality', text)} placeholder="Dirección, vereda .." />
 
-                            <Input value={userData.locality} onChangeText={(text) => handleChange('locality', text)} placeholder="Dirección" />
-                            <Input value={userData.number_assigned} onChangeText={(text) => handleChange('number_assigned', text)} placeholder="Número Boleta" />
+                            </View>}
+
+
                         </View>
 
                     </ScrollView>
 
-                    <View style={{ alignItems: 'flex-end', justifyContent: 'flex-end', paddingVertical: 10, flexDirection: 'row', gap: 10 }}>
-                        {isLoading && <ActivityIndicator color={userEditing?.idLocal ? '#fe5f2f' : '#00bfa5'} size="large" />}
-                        {!userEditing && <Button
-                            title='Guardar'
-                            color='#00bfa5'
-                            radius='lg'
-                            onPress={() => handleSubmitUser(false)}
-                            disabled={isLoading}
-                        />}
-                        {userEditing && <Button
-                            title='Editar'
-                            color='#fe5f2f'
-                            radius='lg'
-                            onPress={() => handleSubmitUser(true)}
-                            disabled={isLoading}
-                        />}
-                        {userEditing && user?.user?.role_name === 'Administrador' && <Button
-                            title='Eliminar'
-                            color='#f84455'
-                            radius='lg'
-                            onPress={() => getUserToDelete(userEditing?.idLocal)}
-                        />}
-                        {isPersonDeleted && user?.user?.role_name === 'Registrador' && <Button
-                            title='Eliminar'
-                            color='#f84455'
-                            radius='lg'
-                            onPress={() => getUserToDelete(userEditing?.idLocal)}
-                        />}
-
-
-
+                    <View style={styles.footerModal}>
+                        <View>
+                            {selectedRage && <Text>Boleta: <Text style={styles.currentTicket}>{selectedRage.last}</Text></Text>}
+                        </View>
+                        <View style={{flexDirection:'row', gap:10}}>
+                            {isLoading && <ActivityIndicator color={userEditing?.idLocal ? '#fe5f2f' : '#00bfa5'} size="large" />}
+                            {!userEditing && <Button
+                                title='Guardar'
+                                color='#00bfa5'
+                                radius='lg'
+                                onPress={() => handleSubmitUser(false)}
+                                disabled={isLoading}
+                            />}
+                            {userEditing && <Button
+                                title='Editar'
+                                color='#fe5f2f'
+                                radius='lg'
+                                onPress={() => handleSubmitUser(true)}
+                                disabled={isLoading}
+                            />}
+                            {userEditing && user?.user?.role_name === 'Administrador' && <Button
+                                title='Eliminar'
+                                color='#f84455'
+                                radius='lg'
+                                onPress={() => getUserToDelete(userEditing?.idLocal)}
+                            />}
+                            {isPersonDeleted && user?.user?.role_name === 'Registrador' && <Button
+                                title='Eliminar'
+                                color='#f84455'
+                                radius='lg'
+                                onPress={() => getUserToDelete(userEditing?.idLocal)}
+                            />}
+                        </View>
                     </View>
                     {isFormEmpty && <Text style={styles.alertText}>{isFormEmpty}</Text>}
 
@@ -317,6 +315,18 @@ const styles = StyleSheet.create({
         borderStartWidth: 2,
         borderRightColor: 'red',
         fontSize: 15
+    },
+    footerModal: {
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingVertical: 10,
+        flexDirection: 'row',
+        gap: 10
+    },
+    currentTicket: {
+        color: '#00bfa5',
+        fontWeight: 'bold',
+        fontSize: 20
     }
 
 })

@@ -10,7 +10,7 @@ import UsePersonsStorage from "../hooks/UsePersonsStorage";
 import ApiService from "../services/ApiService";
 
 export default function AddUser() {
-    const { user } = useContext(UserContext);
+    const { user, rangeByUserLocal } = useContext(UserContext);
     const { handleGetPersons, handleGetPersonsAdmin } = UsePersonsStorage()
     const [showModal, setShowModal] = useState(false)
     const [usersLocal, setUsersLocal] = useState([])
@@ -22,9 +22,9 @@ export default function AddUser() {
     const toast = useToast();
 
     useEffect(() => {
-        validateRolUser();
-       
+        validateRolUser();     
     }, []);
+
 
     const handleModalClose = async () => {
         validateRolUser()
@@ -55,20 +55,23 @@ export default function AddUser() {
     }
 
     const handleSearch = (text) => {
+        
         if (text === '') {
             setFilteredUsers(usersLocal)
         } else {
             const filtered = usersLocal.filter((user) =>
                 `${user.name} ${user.last_name}`.toLowerCase().includes(text.toLowerCase()) ||
                 user.document_number.toLowerCase().includes(text.toLowerCase()) ||
+                `${user.number_assigned}`.toLowerCase().includes(text.toLowerCase()) ||
                 user.cellphone.toLowerCase().includes(text.toLowerCase()) ||
                 user.city.toLowerCase().includes(text.toLowerCase()) ||
-                user.locality.toLowerCase().includes(text.toLowerCase())
-            );
+                user.locality.toLowerCase().includes(text.toLowerCase())  
+            )
             setFilteredUsers(filtered);
         }
     };
 
+    
     const handleGetIdUser = (id) => {
         const userEditSelected = usersLocal.filter(user => user.document_number === id ? user : null)[0]
         setUserEditing(userEditSelected)
@@ -151,7 +154,7 @@ export default function AddUser() {
                 {!filteredUsers.length && <Text style={styles.textNoResults}>{usersLocal.length ? 'No hay resultados de búsqueda' : 'No hay usuarios registrados'}</Text>}
             </ScrollView>
 
-            <AddUserModal visible={showModal} onClose={handleModalClose} userEditing={userEditing} totalRecords={usersLocal.length} />
+            <AddUserModal visible={showModal} onClose={handleModalClose} userEditing={userEditing} totalRecords={usersLocal.length} rangeByUser={rangeByUserLocal}/>
             {/* Modal para enviar mensajes */}
             <Modal
                 visible={showSendMessageModal}

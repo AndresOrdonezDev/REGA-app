@@ -5,6 +5,7 @@ import NetInfo from "@react-native-community/netinfo";
 import ApiService from "../services/ApiService";
 const USER_LOCAL_KEY = '@My-persons-local';
 const USER_LOCAL_ADMIN_KEY = '@My-persons-admin-local';
+const USER_LOCAL_RANGES = '@My-ranges'
 
 export default function UsePersonsStorage() {
 
@@ -20,17 +21,19 @@ export default function UsePersonsStorage() {
 
 
     const handleSavePerson = useCallback(async (person) => {
+        console.log('persona a crear', person)
         try {
             const { is_synced } = person
             if (is_synced === '1') {
                 await sendDataServer(person)
                 await handleSaveRecordLocal(person)
+                
             } else {
                 await handleSaveRecordLocal(person)
             }
             await handleGetPersons()
         } catch (error) {
-            console.error("Error al guardar el Registro:", error);
+            console.error("Error al guardar el Registro:", error.response.data.messages);
             return toast.show("Error al guardar el Registro", { type: "error" });
         }
     }, []);
@@ -40,11 +43,10 @@ export default function UsePersonsStorage() {
             const usersLocal = await AsyncStorage.getItem(USER_LOCAL_KEY);
             if (usersLocal) {
                 const usersParsed = JSON.parse(usersLocal);
-                persons = usersParsed
                 return usersParsed;
             }
 
-            setTotalPersonLocal(persons)
+           
             return [];
         } catch (error) {
             console.error("Error al obtener los registros:", error);
@@ -135,6 +137,7 @@ export default function UsePersonsStorage() {
         });
     }
 
+   
     async function updatePersonServer(idLocal, person) {
         const { data } = await ApiService.updatePerson(idLocal, person)
         return data

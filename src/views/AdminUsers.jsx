@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import Header from "../components/Header";
+import { useNavigation } from '@react-navigation/native'
 import { Button, Icon, Input } from "@rneui/themed";
 import UseUsersStorage from "../hooks/UseUsersStorage";
 import UseRolesStorage from "../hooks/UseRolesStorage";
@@ -18,7 +19,8 @@ import { UserContext } from "../context/UserContext";
 import SetRangeUserModal from "../components/SetRangeUserModal";
 
 export default function AdminUsers() {
-  const { user, getAllRangeCities,getAllRangeByUser,  } = useContext(UserContext);
+  const { navigate } = useNavigation();
+  const { user, getAllRangeCities,getAllRangeByUser, getRangeUserLocal  } = useContext(UserContext);
   const { handleFetchUsersFromApi, handleGetLocalUsers } = UseUsersStorage();
   const { handleFetchRolesFromApi, handleGetLocalRoles } = UseRolesStorage();
   const [showModal, setShowModal] = useState(true);
@@ -35,6 +37,7 @@ export default function AdminUsers() {
     fetchRoles();
     getAllRangeCities()
     getAllRangeByUser()
+    getRangeUserLocal()
   }, []);
 
   const loadLocalUsers = async () => {
@@ -100,6 +103,10 @@ export default function AdminUsers() {
     setShowModal(true);
   };
 
+  const handleToRangesView = ()=>{
+    navigate("assignedRanges");
+  }
+
   return (
     <View style={styles.container}>
       <Header />
@@ -110,7 +117,7 @@ export default function AdminUsers() {
         </View>
         <View style={styles.rightContainer}>
           <Button
-            onPress={fetchUsersFromApi}
+            onPress={()=> handleToRangesView()}
             title=" Ver asignados"
             icon={<Icon name="eye-outline" color="#fff" type="ionicon" />}
             radius="lg"
