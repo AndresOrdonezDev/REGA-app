@@ -1,0 +1,38 @@
+[
+    {
+        "city_name": "MOCOA",
+        "completed": "1",
+        "id": "14",
+        "last": 203,
+        "range_end": "203",
+        "range_init": "201",
+        "user_id": "4"
+    },
+    {
+        "city_name": "COLON",
+        "completed": "0",
+        "id": "17",
+        "last": 502,
+        "range_end": "550",
+        "range_init": "501",
+        "user_id": "4"
+    },
+    {
+        "city_name": "COLON",
+        "completed": "0",
+        "id": "18",
+        "last": "551",
+        "range_end": "570",
+        "range_init": "551",
+        "user_id": "4"
+    },
+    {
+        "city_name": "COLON",
+        "completed": "0",
+        "id": "19",
+        "last": "571",
+        "range_end": "580",
+        "range_init": "571",
+        "user_id": "4"
+    }
+]

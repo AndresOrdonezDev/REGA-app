@@ -5,12 +5,14 @@ import { useState, useEffect } from "react"
 import { Button, Icon } from '@rneui/themed'
 import Header from "../components/Header";
 import { useToast } from "react-native-toast-notifications";
+import UseRangeUser from "../hooks/UseRangeUser";
 
 export default function PendingRecords() {
     const toast = useToast();
     const { navigate } = useNavigation()
 
     const { handleGetPersons, handleSync, sendDataServer, handleUpdateLocal } = UsePersonsStorage()
+    const { syncRangeUserServer } = UseRangeUser()
     const [totalPending, setTotalPending] = useState([])
 
     useEffect(() => {
@@ -33,6 +35,7 @@ export default function PendingRecords() {
 
                 for (const person of totalPending) {
                     await updateRecords(person);
+                    await syncRangeUserServer()
                 }
                 navigate('usersList')
                 return toast.show("Actualización Exitosa 🚀", { type: "success", style: { backgroundColor: "#00bfa5" } });

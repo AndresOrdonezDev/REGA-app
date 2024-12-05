@@ -65,7 +65,7 @@ export default function Home() {
 
     return (
         <View style={styles.container}>
-            <Header totalPersons={totalRecords} />
+            <Header totalPersons={totalRecords}/>
             <View style={styles.usersContainer}>
                 <View style={styles.leftContainer}>
                     <Text style={styles.userLegend} >Personas </Text>

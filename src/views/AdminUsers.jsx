@@ -20,7 +20,7 @@ import SetRangeUserModal from "../components/SetRangeUserModal";
 
 export default function AdminUsers() {
   const { navigate } = useNavigation();
-  const { user, getAllRangeCities,getAllRangeByUser, getRangeUserLocal  } = useContext(UserContext);
+  const { user, getAllRangeCities, getAllRangeByUser, getRangeUserLocal } = useContext(UserContext);
   const { handleFetchUsersFromApi, handleGetLocalUsers } = UseUsersStorage();
   const { handleFetchRolesFromApi, handleGetLocalRoles } = UseRolesStorage();
   const [showModal, setShowModal] = useState(true);
@@ -103,7 +103,7 @@ export default function AdminUsers() {
     setShowModal(true);
   };
 
-  const handleToRangesView = ()=>{
+  const handleToRangesView = () => {
     navigate("assignedRanges");
   }
 
@@ -115,15 +115,15 @@ export default function AdminUsers() {
         <View style={styles.leftContainer}>
           <Text style={styles.userLegend}>Asignar Rangos</Text>
         </View>
-        <View style={styles.rightContainer}>
+        {user?.user.role_name !== "Administrador" && <View style={styles.rightContainer}>
           <Button
-            onPress={()=> handleToRangesView()}
+            onPress={() => handleToRangesView()}
             title=" Ver asignados"
             icon={<Icon name="eye-outline" color="#fff" type="ionicon" />}
             radius="lg"
             color="#00bfa5"
           />
-        </View>
+        </View>}
       </View>
 
       <View style={styles.searchContainer}>

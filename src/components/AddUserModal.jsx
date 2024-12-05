@@ -7,7 +7,7 @@ import UsePersonsStorage from "../hooks/UsePersonsStorage";
 import UseRangeUser from "../hooks/UseRangeUser";
 import { UserContext } from "../context/UserContext";
 
-export default function AddUserModal({ onClose, visible, userEditing, totalRecords, rangeByUser }) {
+export default function AddUserModal({ onClose, visible, userEditing, rangeByUser }) {
     const { user,getRangeUserLocal } = useContext(UserContext);
     const { handleSavePerson, handleUpdatePerson, handleDeleteUser, handleSync, handleGetPersons, handleGetPerson } = UsePersonsStorage()
     const { updateRangesLocals } = UseRangeUser()
@@ -30,6 +30,7 @@ export default function AddUserModal({ onClose, visible, userEditing, totalRecor
 
 
     const handleChange = (name, text) => {
+
         setUserData({
             ...userData,
             [name]: text
@@ -46,20 +47,19 @@ export default function AddUserModal({ onClose, visible, userEditing, totalRecor
             department: "PUTUMAYO",
         })
 
+        
         logLocation()
         setIsPersonDeleted(false)
         validateToDeletePerson()
         setSelectedRage(null)
         setExpanded(false)
         getRangeUserLocal()
-       
+        setIsLoading(false)
     }, [visible])
-
-
 
     const handleSubmitUser = async (isEdit) => {
 
-        if (!selectedRage) {
+        if (!selectedRage && !isEdit) {
             setIsFormEmpty('Elije un rango de numeración')
             setTimeout(() => {
                 setIsFormEmpty('')
@@ -69,6 +69,14 @@ export default function AddUserModal({ onClose, visible, userEditing, totalRecor
 
         if (Object.values(userData).includes('')) {
             setIsFormEmpty(`Todos los campos son obligatorios`)
+            setTimeout(() => {
+                setIsFormEmpty('')
+            }, 3000)
+            return
+        }
+        
+        if(userData.cellphone.length < 10 || +userData.cellphone[0] !== 3 || userData.cellphone.length > 10){
+            setIsFormEmpty('Celular incorrecto')
             setTimeout(() => {
                 setIsFormEmpty('')
             }, 3000)
@@ -99,7 +107,9 @@ export default function AddUserModal({ onClose, visible, userEditing, totalRecor
 
            
             setIsLoading(true)
-            const ubication = await logLocation()
+            const validateLocation = await logLocation()
+            const ubication = validateLocation ? validateLocation : "0.000000, -0.000000"
+
             const completed = +selectedRage.last === +selectedRage.range_end ? '1' : '0'
             const last = +selectedRage.last === +selectedRage.range_end ? +selectedRage.last : +selectedRage.last+1
 
@@ -194,7 +204,7 @@ export default function AddUserModal({ onClose, visible, userEditing, totalRecor
                     </View>
                     <ScrollView>
                         <View>
-                            <ListItem.Accordion
+                            {!userEditing && <ListItem.Accordion
                                 content={
                                     <ListItem.Content>
                                         <ListItem.Title>Rangos de numeración</ListItem.Title>
@@ -218,12 +228,20 @@ export default function AddUserModal({ onClose, visible, userEditing, totalRecor
 
                                     </ListItem.Content>
                                 </ListItem>
-                            </ListItem.Accordion>
+                            </ListItem.Accordion>}
+
                             {selectedRage && <View>
                                 <Input value={userData.name} onChangeText={(text) => handleChange('name', text)} placeholder="Nombres" />
                                 <Input value={userData.last_name} onChangeText={(text) => handleChange('last_name', text)} placeholder="Apellidos" />
-                                <Input value={userData.document_number} onChangeText={(text) => handleChange('document_number', text)} placeholder="No. Cédula" />
-                                <Input value={userData.cellphone} onChangeText={(text) => handleChange('cellphone', text)} placeholder="Celular" />
+                                <Input keyboardType="numeric" value={userData.document_number} onChangeText={(text) => handleChange('document_number', text)} placeholder="No. Cédula" />
+                                <Input keyboardType="numeric" value={userData.cellphone} onChangeText={(text) => handleChange('cellphone', text)} placeholder="Celular" />
+                                <Input value={userData.locality} onChangeText={(text) => handleChange('locality', text)} placeholder="Dirección, vereda .." />
+                            </View>}
+                            {userEditing && <View>
+                                <Input value={userData.name} onChangeText={(text) => handleChange('name', text)} placeholder="Nombres" />
+                                <Input value={userData.last_name} onChangeText={(text) => handleChange('last_name', text)} placeholder="Apellidos" />
+                                <Input keyboardType="numeric" value={userData.document_number} onChangeText={(text) => handleChange('document_number', text)} placeholder="No. Cédula" />
+                                <Input keyboardType="numeric" value={userData.cellphone} onChangeText={(text) => handleChange('cellphone', text)} placeholder="Celular" />
                                 <Input value={userData.locality} onChangeText={(text) => handleChange('locality', text)} placeholder="Dirección, vereda .." />
 
                             </View>}
@@ -236,6 +254,7 @@ export default function AddUserModal({ onClose, visible, userEditing, totalRecor
                     <View style={styles.footerModal}>
                         <View>
                             {selectedRage && <Text>Boleta: <Text style={styles.currentTicket}>{selectedRage.last}</Text></Text>}
+                            {userEditing && <Text>Boleta: <Text style={styles.currentTicket}>{userEditing.number_assigned}</Text></Text>}
                         </View>
                         <View style={{flexDirection:'row', gap:10}}>
                             {isLoading && <ActivityIndicator color={userEditing?.idLocal ? '#fe5f2f' : '#00bfa5'} size="large" />}

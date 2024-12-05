@@ -14,7 +14,7 @@ export default function Header({ totalPersons }) {
   const { handleDeleteAuth } = UseAuthStorage()
   const { navigate } = useNavigation();
   const { name } = useRoute();
-  const { user, setUser } = useContext(UserContext);
+  const { user, setUser, } = useContext(UserContext);
   const [menuVisible, setMenuVisible] = useState(false);
   const [totalPending, setTotalPending] = useState(0)
 
@@ -43,7 +43,7 @@ export default function Header({ totalPersons }) {
     fetchUser();
   }, [user, setUser]);
 
-  
+
   const handleLogout = async () => {
     try {
       await AsyncStorage.removeItem("@Auth-user"); // Eliminar usuario autenticado
@@ -68,7 +68,7 @@ export default function Header({ totalPersons }) {
     navigate("Panel"); // Redirigir al Panel de Administración
   };
 
-  const navigateToView = (view) =>{
+  const navigateToView = (view) => {
     navigate(view)
   }
 
@@ -133,7 +133,7 @@ export default function Header({ totalPersons }) {
         </TouchableOpacity>}
 
 
-        <TouchableOpacity onPress={()=>setMenuVisible(!menuVisible)}>
+        <TouchableOpacity onPress={() => setMenuVisible(!menuVisible)}>
           <Image
             style={styles.image}
             source={{
@@ -144,24 +144,23 @@ export default function Header({ totalPersons }) {
         {menuVisible && (
           <View style={styles.card}>
 
-            <TouchableOpacity onPress={navigateToAdminUsers} style={styles.menuItem}>
+            {user?.user?.role_name !== 'Registrador' && <TouchableOpacity onPress={navigateToAdminUsers} style={styles.menuItem}>
               <Text style={styles.menuText}>Usuarios</Text>
               <Button
                 color='transparent'
                 icon={<Icon name="supervisor-account" color="#fff" />}
                 onPress={navigateToAdminUsers}
               />
-            </TouchableOpacity>
-
-            <TouchableOpacity onPress={()=>navigateToView('adminRageCities')} style={styles.menuLogout}>
+            </TouchableOpacity>}
+            {user?.user?.role_name === 'Administrador' && <TouchableOpacity onPress={() => navigateToView('adminRageCities')} style={styles.menuLogout}>
               <Text style={styles.menuText}>Municipios</Text>
               <Button
                 color="transparent"
-                icon={<Icon name="cloud-download-outline" color="#fff" type="ionicon" />}
-                onPress={()=>navigateToView('adminRageCities')}
+                icon={<Icon name="home-outline" color="#fff" type="ionicon" />}
+                onPress={() => navigateToView('adminRageCities')}
               />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={handleExportData} style={styles.menuLogout}>
+            </TouchableOpacity>}
+            {user?.user?.role_name !== 'Coordinador' && <TouchableOpacity onPress={handleExportData} style={styles.menuLogout}>
               <Text style={styles.menuText}>Exportar</Text>
               <Button
                 color="transparent"
@@ -169,6 +168,17 @@ export default function Header({ totalPersons }) {
                 onPress={handleExportData}
               />
             </TouchableOpacity>
+            }
+            {user?.user?.role_name !== 'Administrador' &&  <TouchableOpacity onPress={() => navigateToView('assignedRanges')} style={styles.menuLogout}>
+              <Text style={styles.menuText}>Rangos</Text>
+              <Button
+                color="transparent"
+                icon={<Icon name="layers" color="#fff" type="ionicon" />}
+                onPress={() => navigateToView('assignedRanges')}
+              />
+            </TouchableOpacity>
+            }
+            
 
             <TouchableOpacity onPress={handleLogout} style={styles.menuLogout}>
               <Text style={styles.menuText}>Salir</Text>

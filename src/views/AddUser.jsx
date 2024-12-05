@@ -136,7 +136,7 @@ export default function AddUser() {
             </View>
             <View style={styles.userListHeader}>
                 <Text style={styles.userListTitle}>Usuarios Registrados: {usersLocal.length}</Text>
-                {user?.user?.role_name === 'Administrador' && <Button
+                {user?.user?.role_name !== 'Registrador'&& <Button
                     onPress={handleOpenSendMessageModal}
                     icon={<Icon name='send' color='#fff' />}
                     radius='lg'
